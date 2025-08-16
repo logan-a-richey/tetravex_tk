@@ -13,6 +13,13 @@ class GameManager:
 
         self.app.finish_init()
 
+    def new_game(self, size: int):
+        self.engine.new_game(size) 
+        self.draw_canvas() 
+
+    def draw_canvas(self):
+        self.app.draw_canvas() 
+
     def run(self):
         self.app.run()
 
