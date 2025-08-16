@@ -16,6 +16,14 @@ class GameManager:
     def new_game(self, size: int):
         self.engine.new_game(size) 
         self.draw_canvas() 
+    
+    def make_move(self, i1, j1, i2, j2):
+        self.engine.make_move(i1, j1, i2, j2)
+        self.draw_canvas() 
+        
+        res = self.engine.is_game_over()
+        if res:
+            self.app.on_game_over()
 
     def draw_canvas(self):
         self.app.draw_canvas() 

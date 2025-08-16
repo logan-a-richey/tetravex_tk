@@ -2,8 +2,12 @@
 
 import tkinter as tk 
 
+# globals
+MIN_TILE_SIZE = 30
+MAX_TILE_SIZE = 150
+
 color_map = {
-    0: '#000000', # black
+    0: '#202020', # dark gray
     1: '#ff0000', # red
     2: '#ffa500', # orange
     3: '#ffff00', # yellow
@@ -11,9 +15,10 @@ color_map = {
     5: '#00ffff', # cyan
     6: '#0000ff', # blue
     7: '#ff00ff', # pink
-    8: '#707070', # gray
+    8: '#707070', # light gray
     9: '#e0e0e0', # white 
 }
+
 class App:
     def __init__(self):
         self.gm = None 
@@ -33,6 +38,9 @@ class App:
         
         # default game 3x3
         self.on_new_game(3)
+        
+        self.clicked_square = None 
+        self.seen_game_over = 0 
 
     def setup_menubar(self):
         menubar = tk.Menu(self.root)
@@ -55,7 +63,63 @@ class App:
         menubar.add_cascade(label="About", menu=about_menu)
 
     def on_button1_event(self, event, *args, **kwargs):
-        print("Left click @ ({}, {})".format(event.x, event.y) )
+        i = event.y // self.tile_size
+        j = event.x // self.tile_size 
+
+        grid = self.gm.engine.grid 
+        if not grid:
+            print("[E] No grid to draw")
+
+        numRows = len(grid)
+        numCols = len(grid[0])
+        
+        if (i < 0 or j < 0 or i >= numRows or j >= numCols):
+            return
+        
+        if self.clicked_square:
+            i1, j1 = self.clicked_square
+            i2, j2 = i, j
+            self.gm.make_move(i1, j1, i2, j2)
+            self.clicked_square = None
+        else:
+            self.clicked_square = [i, j]
+
+        # print("{} {}".format(i, j) )
+    
+    def on_game_over(self):
+        if self.seen_game_over:
+            return 
+        self.seen_game_over = 1 
+        
+        # --- Game over popup ---
+        popup = tk.Toplevel(self.root)
+        popup.title("Game over")
+        popup.geometry("400x300")
+
+        msg = '\n'.join([
+            "You completed the puzzle!",
+            "Congrats"
+        ])
+
+        label = tk.Label(popup, text=msg)
+        label.pack(pady=20)
+        
+        close_button = tk.Button(popup, text="Okay", command=popup.destroy)
+        close_button.pack()
+        
+        # center the popup
+        popup.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (popup.winfo_width() // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (popup.winfo_height() // 2)
+        popup.geometry("+{}+{}".format(x, y))
+
+    def zoom_out(self):
+        self.tile_size = max(MIN_TILE_SIZE, self.tile_size - 10)
+        self.draw_canvas()
+
+    def zoom_in(self):
+        self.tile_size = min(MAX_TILE_SIZE, self.tile_size + 10)
+        self.draw_canvas()
 
     def setup_canvas(self):
         self.tile_size = 80
@@ -67,8 +131,8 @@ class App:
         self.canvas.bind('<Button-1>', lambda event: self.on_button1_event(event) ) 
         self.root.bind('<Escape>', lambda event: self.on_quit() ) 
         
-        # self.root.bind('<Control-minus>', lambda event: self.zoom_out() )
-        # self.root.bind('<Control-equal>', lambda event: self.zoom_in() )
+        self.root.bind('<Control-minus>', lambda event: self.zoom_out() )
+        self.root.bind('<Control-equal>', lambda event: self.zoom_in() )
         self.canvas.focus_set()
     
     def draw_canvas(self):
@@ -104,28 +168,39 @@ class App:
                 b_ne = (x1, y0)
                 b_sw = (x0, y1)
                 b_se = (x1, y1)
+                
                 b_c  = (xc, yc)
+
+                tn   = (x0 + int(self.tile_size * 0.50), y0 + int(self.tile_size * 0.25) )
+                te   = (x0 + int(self.tile_size * 0.75), y0 + int(self.tile_size * 0.50) )
+                ts   = (x0 + int(self.tile_size * 0.50), y0 + int(self.tile_size * 0.75) )
+                tw   = (x0 + int(self.tile_size * 0.25), y0 + int(self.tile_size * 0.50) )
+                
                 
                 # draw triangles
                 # n edge
-
+                text_color = "#000000" if b.n != 0 else "#ffffff"
                 points = [b_c, b_ne, b_nw]
-                self.canvas.create_polygon(points, fill=color_map.get(b.n) )
-                
+                self.canvas.create_polygon(points, fill=color_map.get(b.n), width=2, outline='#000000')
+                self.canvas.create_text(*tn, text="{}".format(b.n), anchor=tk.CENTER, fill=text_color)
+
                 # e edge
+                text_color = "#000000" if b.e != 0 else "#ffffff"
                 points = [b_c, b_se, b_ne]
-                self.canvas.create_polygon(points, fill=color_map.get(b.e) )
+                self.canvas.create_polygon(points, fill=color_map.get(b.e), width=2, outline='#000000' )
+                self.canvas.create_text(*te, text="{}".format(b.e), anchor=tk.CENTER, fill=text_color)
 
                 # s edge
+                text_color = "#000000" if b.s != 0 else "#ffffff"
                 points = [b_c, b_sw, b_se]
-                self.canvas.create_polygon(points, fill=color_map.get(b.s) )
+                self.canvas.create_polygon(points, fill=color_map.get(b.s), width=2, outline='#000000' )
+                self.canvas.create_text(*ts, text="{}".format(b.s), anchor=tk.CENTER, fill=text_color)
 
                 # w edge
+                text_color = "#000000" if b.w != 0 else "#ffffff"
                 points = [b_c, b_nw, b_sw]
-                self.canvas.create_polygon(points, fill=color_map.get(b.w) )
-                
-                # text
-                # canvas.create_text(50, 120, text="Left Aligned\nText with Anchor", anchor=tk.NW, font=("Verdana", 14), fill="green")
+                self.canvas.create_polygon(points, fill=color_map.get(b.w), width=2, outline='#000000' )
+                self.canvas.create_text(*tw, text="{}".format(b.w), anchor=tk.CENTER, fill=text_color)
 
     def on_new_game(self, size: int):
         print("[INFO] New game, size={}".format(size))
