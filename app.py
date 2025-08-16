@@ -1,31 +1,13 @@
-# app.py
+# app.py 
 
-import random
 import tkinter as tk 
-
-class Block:
-    def __init__(self):
-        # block coordinates
-        self.i = i
-        self.j = j 
-        
-        # edge values
-        self.n = 0
-        self.e = 0
-        self.s = 0
-        self.w = 0
-
-class Logic:
-    def __init__(self):
-        pass 
-    
-    def new_game(self, size:int):
-        self.grid = []
 
 class App:
     def __init__(self):
+        self.gm = None 
+
+    def finish_init(self):
         self.root = tk.Tk()
-        self.logic = Logic()
 
         self.screen_width, self.screen_height = (800, 600)
         self.root.geometry("{}x{}".format(self.screen_width, self.screen_height))
@@ -36,6 +18,9 @@ class App:
 
         self.setup_menubar() 
         self.setup_canvas()
+        
+        # default game 3x3
+        self.on_new_game(3)
 
     def setup_menubar(self):
         menubar = tk.Menu(self.root)
@@ -59,11 +44,7 @@ class App:
         about_menu.add_command(label="Open About", command=self.open_about)
         menubar.add_cascade(label="About", menu=about_menu)
 
-    def on_mouse_motion(self, event, *args, **kwargs):
-        ''' Method binded to canvas object '''
-        self.mouse_pos = (event.x, event.y)
-    
-    def on_button1_event(self, event):
+    def on_button1_event(self, event, *args, **kwargs):
         print("Left click @ ({}, {})".format(event.x, event.y) )
 
     def setup_canvas(self):
@@ -73,13 +54,18 @@ class App:
         self.canvas = tk.Canvas(self.root, bg="#707070")
         self.canvas.pack(side='top', fill='both', expand=True)
         
-        self.canvas.bind('<Motion>', lambda event: self.on_mouse_motion(event) )
         self.canvas.bind('<Button-1>', lambda event: self.on_button1_event(event) ) 
         self.root.bind('<Escape>', lambda event: self.on_quit() ) 
         
         # self.root.bind('<Control-minus>', lambda event: self.zoom_out() )
         # self.root.bind('<Control-equal>', lambda event: self.zoom_in() )
         self.canvas.focus_set()
+    
+    def draw_canvas(self):
+        # TODO 
+        self.canvas.delete('all')
+
+        self.canvas.create_rectangle(x0, y0, x1, y1, fill=Colors.grid_bg)
 
     def on_new_game(self, size: int):
         print("[INFO] New game, size={}".format(size))
@@ -112,8 +98,3 @@ class App:
     
     def run(self):
         self.root.mainloop()
-
-
-if __name__ == "__main__":
-    a = App()
-    a.run()

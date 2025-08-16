@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
-from app import App 
+from game_manager import GameManager 
 
 def main():
-    
-    a = App()
-    a.run()
-
-    return 
+    gm = GameManager() 
+    gm.run()
 
 if __name__ == "__main__":
     main()
