@@ -17,6 +17,9 @@ class GameManager:
         self.engine.new_game(size) 
         self.draw_canvas() 
     
+    def get_wrong_coords(self):
+        return self.engine.get_wrong_coords()
+
     def make_move(self, i1, j1, i2, j2):
         self.engine.make_move(i1, j1, i2, j2)
         self.draw_canvas() 

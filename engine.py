@@ -81,30 +81,30 @@ class Engine:
 
                 # check west neighbor
                 if j > offset:
-                    left = self.grid[i][j - 1]
-                    if b.w != left.e:
+                    b2 = self.grid[i][j - 1]
+                    if (b2.enable and b.w != b2.e):
                         is_solved = 0 
                         wrong_coords.append( [i, j] )
                         continue
 
                 # check east neighbor
                 if j < offset + size - 1:
-                    right = self.grid[i][j + 1]
-                    if b.e != right.w:
+                    b2 = self.grid[i][j + 1]
+                    if (b2.enable and b.e != b2.w):
                         wrong_coords.append( [i, j] )
                         continue
 
                 # check north neighbor
                 if i > 0:
-                    top = self.grid[i - 1][j]
-                    if b.n != top.s:
+                    b2 = self.grid[i - 1][j]
+                    if (b2.enable and b.n != b2.s):
                         wrong_coords.append( [i, j] )
                         continue
 
                 # check south neighbor
                 if i < size - 1:
-                    bottom = self.grid[i + 1][j]
-                    if b.s != bottom.n:
+                    b2 = self.grid[i + 1][j]
+                    if (b2.enable and b.s != b2.n):
                         wrong_coords.append( [i, j] )
                         continue
 

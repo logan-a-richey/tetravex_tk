@@ -5,6 +5,7 @@ import tkinter as tk
 # globals
 MIN_TILE_SIZE = 30
 MAX_TILE_SIZE = 150
+BOARD_MARGIN = 20  # width of gap between boards
 
 color_map = {
     0: '#202020', # dark gray
@@ -63,28 +64,41 @@ class App:
         menubar.add_cascade(label="About", menu=about_menu)
 
     def on_button1_event(self, event, *args, **kwargs):
-        i = event.y // self.tile_size
-        j = event.x // self.tile_size 
+        size = self.gm.engine.size
+        tile = self.tile_size
+        margin  = BOARD_MARGIN
 
-        grid = self.gm.engine.grid 
+        i = event.y // tile
+
+        # Determine column index with margin adjustment
+        if event.x < size * tile:
+            # left board
+            j = event.x // tile
+        elif event.x < size * tile + margin:
+            # inside the margin → ignore click
+            return
+        else:
+            # right board → subtract margin before computing j
+            j = (event.x - margin) // tile
+
+        grid = self.gm.engine.grid
         if not grid:
             print("[E] No grid to draw")
+            return
 
         numRows = len(grid)
         numCols = len(grid[0])
-        
-        if (i < 0 or j < 0 or i >= numRows or j >= numCols):
+
+        if i < 0 or j < 0 or i >= numRows or j >= numCols:
             return
-        
+
         if self.clicked_square:
             i1, j1 = self.clicked_square
             i2, j2 = i, j
             self.gm.make_move(i1, j1, i2, j2)
             self.clicked_square = None
         else:
-            self.clicked_square = [i, j]
-
-        # print("{} {}".format(i, j) )
+            self.clicked_square = [i, j]  
     
     def on_game_over(self):
         if self.seen_game_over:
@@ -122,7 +136,7 @@ class App:
         self.draw_canvas()
 
     def setup_canvas(self):
-        self.tile_size = 80
+        self.tile_size = 100
         g = self.tile_size * 3 
 
         self.canvas = tk.Canvas(self.root, bg="#707070")
@@ -136,11 +150,8 @@ class App:
         self.canvas.focus_set()
     
     def draw_canvas(self):
-        print("[INFO] Drawing canvas")
-
-        self.canvas.delete('all')
+        # print("[INFO] Drawing canvas")
         
-        # draw grid :
         grid = self.gm.engine.grid 
         if not grid:
             print("[E] No grid to draw")
@@ -149,10 +160,21 @@ class App:
         numRows = len(grid)
         numCols = len(grid[0])
         
+        # clear canvas 
+        self.canvas.delete('all')
+        
+        # draw in canvas
+        wrong_coords = self.gm.get_wrong_coords()
+
         for i in range(numRows):
             for j in range(numCols):
                 x0 = j * self.tile_size 
                 y0 = i * self.tile_size 
+                
+                # NOTE add margin between left board and right board
+                if (j >= numCols // 2):
+                    x0 += BOARD_MARGIN
+
                 x1 = x0 + self.tile_size 
                 y1 = y0 + self.tile_size 
                 xc = x0 + self.tile_size // 2
@@ -175,7 +197,6 @@ class App:
                 te   = (x0 + int(self.tile_size * 0.75), y0 + int(self.tile_size * 0.50) )
                 ts   = (x0 + int(self.tile_size * 0.50), y0 + int(self.tile_size * 0.75) )
                 tw   = (x0 + int(self.tile_size * 0.25), y0 + int(self.tile_size * 0.50) )
-                
                 
                 # draw triangles
                 # n edge
@@ -202,10 +223,28 @@ class App:
                 self.canvas.create_polygon(points, fill=color_map.get(b.w), width=2, outline='#000000' )
                 self.canvas.create_text(*tw, text="{}".format(b.w), anchor=tk.CENTER, fill=text_color)
 
+                if [i, j] in wrong_coords:
+                    self.canvas.create_rectangle(x0, y0, x1, y1, outline='#ff0000', fill='', width=4)
+    
+    def resize_window(self):
+        grid = self.gm.engine.grid 
+        if not grid:
+            print("[E] No grid to draw")
+            return 
+        
+        numRows = len(grid)
+        numCols = len(grid[0])
+        size = numRows 
+
+        w = (self.tile_size * size * 2) + BOARD_MARGIN 
+        h = (self.tile_size * size)
+        self.root.geometry("{}x{}".format(w, h) )
+
     def on_new_game(self, size: int):
         print("[INFO] New game, size={}".format(size))
         self.gm.new_game(size)
-
+        self.resize_window()
+    
     def open_about(self):
         popup = tk.Toplevel(self.root)
         popup.title("About")
@@ -234,3 +273,4 @@ class App:
     
     def run(self):
         self.root.mainloop()
+
