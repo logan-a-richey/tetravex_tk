@@ -1,28 +1,65 @@
 # app.py 
 
 import tkinter as tk 
+from tkinter import ttk 
+
+import random 
 
 # globals
 MIN_TILE_SIZE = 30
 MAX_TILE_SIZE = 150
 BOARD_MARGIN = 20  # width of gap between boards
 
-color_map = {
-    0: '#202020', # dark gray
-    1: '#ff0000', # red
-    2: '#ffa500', # orange
-    3: '#ffff00', # yellow
-    4: '#00ff00', # green
-    5: '#00ffff', # cyan
-    6: '#0000ff', # blue
-    7: '#ff00ff', # pink
-    8: '#707070', # light gray
-    9: '#e0e0e0', # white 
-}
+class Colors:
+    def __init__(self):
+       pass
+
+    def get_color(self, mode: int) -> dict:
+        if mode == 0:
+            high_contrast_colors = {
+                0: '#202020', # dark gray
+                1: '#ff0000', # red
+                2: '#ffa500', # orange
+                3: '#ffff00', # yellow
+                4: '#00ff00', # green
+                5: '#00ffff', # cyan
+                6: '#0000ff', # blue
+                7: '#ff00ff', # pink
+                8: '#707070', # light gray
+                9: '#e0e0e0', # white 
+            }
+            return high_contrast_colors
+        elif mode == 1:
+            solarized_colors = {
+                0: "#0e0e0e", # black
+                1: "#ed322f",  # Red
+                2: "#b58900",  # Yellow
+                3: "#859900",  # Green
+                4: "#cb4b16",  # Orange
+                5: "#2aa198",  # Cyan
+                6: "#207bd2",  # Blue
+                7: "#d33682",  # Magenta
+                8: "#6c71c4",  # Violet
+                9: "#808080", # Gray
+            }
+            return solarized_colors
+        else:
+            # random colors
+            random_colors = {}
+            for i in range(10):
+                random_rgb = [random.randint(50,200) for _ in range(3)]
+                hex_color = "#{:02x}{:02x}{:02x}".format(*random_rgb)
+                random_colors[i] = hex_color
+            return random_colors
 
 class App:
     def __init__(self):
         self.gm = None 
+        self.colors = Colors()
+        
+        self.color_map: dict = self.colors.get_color(1)
+        
+        self.show_wrong_tile: bool = False
 
     def finish_init(self):
         self.root = tk.Tk()
@@ -43,6 +80,78 @@ class App:
         self.clicked_square = None 
         self.seen_game_over = 0 
 
+    def open_about(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("About")
+        popup.geometry("400x300")
+
+        msg = '\n'.join([
+            "This is a Tetravex game clone",
+            "Make all of the edges of the blocks match on the right",
+            "Good luck!"
+        ])
+
+        label = tk.Label(popup, text=msg)
+        label.pack(pady=20)
+        
+        close_button = tk.Button(popup, text="Okay", command=popup.destroy)
+        close_button.pack()
+        
+        # center the popup
+        popup.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (popup.winfo_width() // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (popup.winfo_height() // 2)
+        popup.geometry("+{}+{}".format(x, y))
+    
+    def open_prefs(self): 
+        popup = tk.Toplevel(self.root)
+        popup.title("Preferences Window")
+        popup.geometry("800x400")
+
+        label = tk.Label(popup, text="Color Theme:")
+        label.pack(pady=10)
+
+        valid_combobox_choices = ["High Contrast", "Solarized", "Randomized"]
+        combo_var = tk.StringVar()
+        combobox = ttk.Combobox(popup, textvariable=combo_var, values=valid_combobox_choices)
+        combobox.pack(pady=10)
+        combobox.set(valid_combobox_choices[0])
+        
+        def on_combobox_select(event):
+            selected_item = combo_var.get()
+            print("[INFO] Item =", selected_item)
+            idx = valid_combobox_choices.index(selected_item)
+            self.color_map = self.colors.get_color(idx)
+
+            self.draw_canvas()
+            return 
+        
+        combobox.bind("<<ComboboxSelected>>", on_combobox_select)
+
+        # --- Checkbox widget ---- 
+        label = tk.Label(popup, text="Enable wrong tile outline:")
+        label.pack(pady=10)
+        
+        checkbox_var = tk.BooleanVar()
+        checkbox = tk.Checkbutton(popup, text="Enable outline", variable=checkbox_var)
+        
+        def on_checkbox_change():
+            self.show_wrong_tile = checkbox_var.get()
+            self.draw_canvas()
+            return
+
+        checkbox.config(command=on_checkbox_change)
+        checkbox.pack(pady=10)
+
+        close_button = tk.Button(popup, text="Okay", command=popup.destroy)
+        close_button.pack(pady=10)
+        
+        # center the popup
+        popup.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (popup.winfo_width() // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (popup.winfo_height() // 2)
+        popup.geometry("+{}+{}".format(x, y))
+
     def setup_menubar(self):
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -53,10 +162,13 @@ class App:
             file_menu.add_command(label="{}x{}".format(i, i), command=lambda size=i: self.on_new_game(size) )
 
         file_menu.add_separator()
-
         file_menu.add_command(label="Quit", command=lambda: self.on_quit() )
-
         menubar.add_cascade(label="File", menu=file_menu) 
+        
+        # --- Prefs Menu ---
+        prefs_menu = tk.Menu(menubar, tearoff=0)
+        prefs_menu.add_command(label="Open Prefs", command=self.open_prefs)
+        menubar.add_cascade(label="Prefs", menu=prefs_menu)
 
         # --- About Menu ---
         about_menu = tk.Menu(menubar, tearoff=0)
@@ -151,7 +263,7 @@ class App:
     
     def draw_canvas(self):
         # print("[INFO] Drawing canvas")
-        
+                
         grid = self.gm.engine.grid 
         if not grid:
             print("[E] No grid to draw")
@@ -197,33 +309,34 @@ class App:
                 te   = (x0 + int(self.tile_size * 0.75), y0 + int(self.tile_size * 0.50) )
                 ts   = (x0 + int(self.tile_size * 0.50), y0 + int(self.tile_size * 0.75) )
                 tw   = (x0 + int(self.tile_size * 0.25), y0 + int(self.tile_size * 0.50) )
-                
+
+
                 # draw triangles
                 # n edge
                 text_color = "#000000" if b.n != 0 else "#ffffff"
                 points = [b_c, b_ne, b_nw]
-                self.canvas.create_polygon(points, fill=color_map.get(b.n), width=2, outline='#000000')
+                self.canvas.create_polygon(points, fill=self.color_map.get(b.n), width=2, outline='#000000')
                 self.canvas.create_text(*tn, text="{}".format(b.n), anchor=tk.CENTER, fill=text_color)
 
                 # e edge
                 text_color = "#000000" if b.e != 0 else "#ffffff"
                 points = [b_c, b_se, b_ne]
-                self.canvas.create_polygon(points, fill=color_map.get(b.e), width=2, outline='#000000' )
+                self.canvas.create_polygon(points, fill=self.color_map.get(b.e), width=2, outline='#000000' )
                 self.canvas.create_text(*te, text="{}".format(b.e), anchor=tk.CENTER, fill=text_color)
 
                 # s edge
                 text_color = "#000000" if b.s != 0 else "#ffffff"
                 points = [b_c, b_sw, b_se]
-                self.canvas.create_polygon(points, fill=color_map.get(b.s), width=2, outline='#000000' )
+                self.canvas.create_polygon(points, fill=self.color_map.get(b.s), width=2, outline='#000000' )
                 self.canvas.create_text(*ts, text="{}".format(b.s), anchor=tk.CENTER, fill=text_color)
 
                 # w edge
                 text_color = "#000000" if b.w != 0 else "#ffffff"
                 points = [b_c, b_nw, b_sw]
-                self.canvas.create_polygon(points, fill=color_map.get(b.w), width=2, outline='#000000' )
+                self.canvas.create_polygon(points, fill=self.color_map.get(b.w), width=2, outline='#000000' )
                 self.canvas.create_text(*tw, text="{}".format(b.w), anchor=tk.CENTER, fill=text_color)
 
-                if [i, j] in wrong_coords:
+                if (self.show_wrong_tile and [i, j] in wrong_coords):
                     self.canvas.create_rectangle(x0, y0, x1, y1, outline='#ff0000', fill='', width=4)
     
     def resize_window(self):
@@ -245,28 +358,6 @@ class App:
         self.gm.new_game(size)
         self.resize_window()
     
-    def open_about(self):
-        popup = tk.Toplevel(self.root)
-        popup.title("About")
-        popup.geometry("400x300")
-
-        msg = '\n'.join([
-            "This is a Tetravex game clone",
-            "Make all of the edges of the blocks match on the right",
-            "Good luck!"
-        ])
-
-        label = tk.Label(popup, text=msg)
-        label.pack(pady=20)
-        
-        close_button = tk.Button(popup, text="Okay", command=popup.destroy)
-        close_button.pack()
-        
-        # center the popup
-        popup.update_idletasks()
-        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (popup.winfo_width() // 2)
-        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (popup.winfo_height() // 2)
-        popup.geometry("+{}+{}".format(x, y))
 
     def on_quit(self):
         self.root.quit()
