@@ -2,12 +2,16 @@
 
 import random
 
+from typing import List, Tuple
+
 class Block:
-    def __init__(self, i, j):
+    def __init__(self, i, j, uid=0):
         # block coordinates
         self.i = i
         self.j = j 
         
+        self.uid = uid 
+
         # edge values
         self.n = 0
         self.e = 0
@@ -27,13 +31,14 @@ class Engine:
     def __init__(self):
         self.gm = None 
         self.size = 3
+        self.block_to_solution = {}
 
     def new_game(self, size: int):
         self.size = size
-        self.grid = [[Block(row, col) for col in range(size * 2)] for row in range(size) ]
+        self.grid = [[Block(row, col, uid=row*size+col) for col in range(size * 2)] for row in range(size) ]
         
         blocks = []
-
+            
         for i in range(size):
             for j in range(size):
                 b = self.grid[i][j] 
@@ -48,25 +53,52 @@ class Engine:
                     b.w = b2.e
 
                 blocks.append(b)
+        
+        self.block_to_solution = {}
+        for b in blocks:
+            self.block_to_solution[b.uid] = [b.i, b.j + size]
 
         random.shuffle(blocks)
+        
         for idx, block in enumerate(blocks):
             i = idx // self.size 
             j = idx % self.size
             self.grid[i][j] = block
+            block.i, block.j = i, j  # keep actual position updated
         
     def make_move(self, i1, j1, i2, j2):
-        # do swap
+        # swap blocks
         self.grid[i1][j1], self.grid[i2][j2] = self.grid[i2][j2], self.grid[i1][j1]
+
+        # update their stored coordinates
+        self.grid[i1][j1].i, self.grid[i1][j1].j = i1, j1
+        self.grid[i2][j2].i, self.grid[i2][j2].j = i2, j2
+   
+    def print_grid(self):
+        numRows = len(self.grid)
+        numCols = len(self.grid[0])
+
+        for i in range(numRows):
+            for j in range(numCols):
+                b = self.grid[i][j] 
+                print(b.to_str(), end=' ')
+            print() 
+        return 
     
-    def print_playable(self):
-        size = self.size
-        offset = size
-        for i in range(size):
-            for j in range(offset, offset + size):
-                print(self.grid[i][j].to_str(), end=' ')
-            print()
-    
+    def print_grid_as_uid(self):
+        numRows = len(self.grid)
+        numCols = len(self.grid[0])
+
+        for i in range(numRows):
+            for j in range(numCols):
+                b = self.grid[i][j] 
+                if b.enable:
+                    print(str(b.uid).rjust(2), end=' ')
+                else:
+                    print('..', end=' ')
+            print() 
+        return 
+
     def get_wrong_coords(self):
         size = self.size
         offset = size  # playable region starts here
@@ -146,3 +178,12 @@ class Engine:
                         return False 
 
         return True   
+
+    def get_hint(self):
+        for row in self.grid:
+            for b in row:
+                if b.enable:
+                    ci, cj = self.block_to_solution[b.uid]
+                    if (b.i != ci or b.j != cj):
+                        return [ (b.i, b.j), (ci, cj) ]
+        return []

@@ -19,6 +19,7 @@ class App:
         self.show_wrong_tile: bool = False
         
         self.clicked_square = None 
+        self.hint_coords = []
         self.seen_game_over = 0 
 
     def finish_init(self):
@@ -157,17 +158,24 @@ class App:
 
         if i < 0 or j < 0 or i >= numRows or j >= numCols:
             return
+        
+        # make move event
 
         if self.clicked_square:
             i1, j1 = self.clicked_square
             i2, j2 = i, j
             self.gm.make_move(i1, j1, i2, j2)
             self.clicked_square = None
+            self.hint_coords = []
         else:
             self.clicked_square = [i, j]  
         
         self.draw_canvas()
     
+    def get_hint(self):
+        self.hint_coords = self.gm.get_hint()
+        self.draw_canvas()
+
     def on_game_over(self):
         if self.seen_game_over:
             return 
@@ -215,6 +223,8 @@ class App:
         
         self.root.bind('<Control-minus>', lambda event: self.zoom_out() )
         self.root.bind('<Control-equal>', lambda event: self.zoom_in() )
+        self.root.bind('<Control-h>', lambda event: self.get_hint() )
+
         self.canvas.focus_set()
     
     def draw_canvas(self):
@@ -291,8 +301,23 @@ class App:
 
                 # Draw wrong outline if needed
                 if self.show_wrong_tile and [i, j] in wrong_coords:
-                    self.canvas.create_rectangle(x0, y0, x1, y1, outline='#ff0000', fill='', width=4)
-    
+                    self.canvas.create_rectangle(x0, y0, x1, y1, outline='#ff0000', fill='', width=5)
+        
+        # show hint square
+        if (self.hint_coords):
+            for hint_coord in self.hint_coords:
+                i, j = hint_coord
+                x0 = j * self.tile_size 
+                y0 = i * self.tile_size 
+                if (j >= numCols // 2):  # add margin between boards
+                    x0 += BOARD_MARGIN
+
+                x1, y1 = x0 + self.tile_size, y0 + self.tile_size
+                xc, yc = x0 + self.tile_size // 2, y0 + self.tile_size // 2
+                
+                self.canvas.create_rectangle(x0, y0, x1, y1, outline='#00ff00', fill='', width=5)
+        return 
+
     def resize_window(self):
         grid = self.gm.engine.grid 
         if not grid:

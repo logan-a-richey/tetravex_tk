@@ -3,6 +3,8 @@
 from app import App
 from engine import Engine 
 
+from typing import List, Tuple
+
 class GameManager:
     def __init__(self):
         self.app = App()
@@ -19,6 +21,10 @@ class GameManager:
     
     def get_wrong_coords(self):
         return self.engine.get_wrong_coords()
+    
+    def get_hint(self) -> List[Tuple[int, int]]:
+        hint_coords = self.engine.get_hint()
+        return hint_coords
 
     def make_move(self, i1, j1, i2, j2):
         self.engine.make_move(i1, j1, i2, j2)
