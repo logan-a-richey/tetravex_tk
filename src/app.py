@@ -14,6 +14,7 @@ class App:
         self.gm = None 
         self.colors = Colors()
         
+        self.current_theme = ""
         self.color_map: dict = self.colors.get_color(0)
         
         self.show_wrong_tile: bool = False
@@ -63,49 +64,56 @@ class App:
         popup.title("Preferences Window")
         popup.geometry("400x400")
 
-        label = tk.Label(popup, text="Color Theme:")
-        label.pack(pady=5)
+        tk.Label(popup, text="Color Theme:").pack(pady=5)
 
-        # TODO change to radio button group instead ?
-        valid_combobox_choices = ["Solarized", "High Contrast", "Randomized"]
-        combo_var = tk.StringVar()
-        combobox = ttk.Combobox(popup, textvariable=combo_var, values=valid_combobox_choices)
-        combobox.pack(pady=5)
-        combobox.set(valid_combobox_choices[0])
-        self.color_map = self.colors.get_color(valid_combobox_choices[0])
+        valid_choices = ["Solarized", "High Contrast", "Randomized"]
+        radvar = tk.StringVar(value=self.current_theme or valid_choices[0])
+    
+        def on_radio_change():
+            text = radvar.get()
+            self.current_theme = text 
 
-        def on_combobox_select(event):
-            selected_item = combo_var.get()
-            # print("[INFO] Item =", selected_item)
-            
-            idx = valid_combobox_choices.index(selected_item)
+            idx = valid_choices.index(text)
             self.color_map = self.colors.get_color(idx)
-
             self.draw_canvas()
             return 
-        
-        combobox.bind("<<ComboboxSelected>>", on_combobox_select)
+
+        # Radiobuttons
+        for choice in valid_choices:
+            tk.Radiobutton(
+                popup, 
+                text=choice, 
+                variable=radvar, 
+                value=choice,
+                command=on_radio_change
+            ).pack(pady=4)
+
+        # radLabel = tk.Label(popup, textvariable=radvar)
+        # radLabel.pack(pady=4)
 
         # --- Checkbox widget ---- 
-        checkbox_var = tk.BooleanVar()
-        checkbox = tk.Checkbutton(popup, text="Enable warning outline", variable=checkbox_var)
-        
+        checkbox_var = tk.BooleanVar(value=getattr(self, "show_wrong_tile", False))
+
         def on_checkbox_change():
             self.show_wrong_tile = checkbox_var.get()
             self.draw_canvas()
-            return
+            return 
 
-        checkbox.config(command=on_checkbox_change)
-        checkbox.pack(pady=5)
+        tk.Checkbutton(
+            popup, 
+            text="Show wrong tile outline", 
+            variable=checkbox_var, 
+            command=on_checkbox_change
+        ).pack(pady=20)
 
-        close_button = tk.Button(popup, text="Okay", command=popup.destroy)
-        close_button.pack(pady=5)
+        # Okay button
+        tk.Button(popup, text="Okay", command=popup.destroy).pack(pady=5)
         
-        # center the popup
+        # Center the popup
         popup.update_idletasks()
         x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (popup.winfo_width() // 2)
         y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (popup.winfo_height() // 2)
-        popup.geometry("+{}+{}".format(x, y))
+        popup.geometry(f"+{x}+{y}")
 
     def setup_menubar(self):
         menubar = tk.Menu(self.root)
@@ -113,7 +121,8 @@ class App:
 
         # --- File Menu ---
         file_menu = tk.Menu(menubar, tearoff=0)
-        for i in range(2, 7):
+        MAX_PUZZLE_SIZE = 8
+        for i in range(2, MAX_PUZZLE_SIZE + 1):
             file_menu.add_command(label="{}x{}".format(i, i), command=lambda size=i: self.on_new_game(size) )
 
         file_menu.add_separator()
