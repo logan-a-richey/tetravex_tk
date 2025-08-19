@@ -22,6 +22,7 @@ class App:
         self.clicked_square = None 
         self.hint_coords = []
         self.seen_game_over = 0 
+        self.last_size = 3
 
     def finish_init(self):
         self.root = tk.Tk()
@@ -34,24 +35,43 @@ class App:
         self.setup_canvas()
         
         # default game 3x3
-        self.on_new_game(3)
+        self.on_new_game(self.last_size)
         
     def open_about(self):
         popup = tk.Toplevel(self.root)
         popup.title("About")
-        popup.geometry("400x300")
+        popup.geometry("500x400")
+
+
+        label_1 = tk.Label(popup, text="How to play", bg='#777777', font=("Arial", 16))
+        label_1.pack(pady=4)
 
         msg = '\n'.join([
-            "This is a Tetravex game clone",
-            "Make all of the edges of the blocks match on the right",
-            "Good luck!"
+            'This is a clone of the game Tetravex',
+            'Click 2 coordinates to swap blocks.',
+            'The goal is to move all of the blocks from the left grid to the right grid,',
+            'such that all adjacent edges are matching in value.',
+            'Try to do it in as few moves possible!'
         ])
 
-        label = tk.Label(popup, text=msg)
-        label.pack(pady=20)
-        
+        label_2 = tk.Label(popup, text=msg)
+        label_2.pack(pady=4)
+
+        label_3 = tk.Label(popup, text="Controls", bg='#777777', font=("Arial", 16))
+        label_3.pack(pady=4)
+
+        msg = '\n'.join([
+            'CTRL N : New game',
+            'CTRL H : Get hint',
+            'CTRL - : Zoom out',
+            'CTRL = : Zoom in',
+            'ESCAPE : Quit program'
+        ])
+        label_4 = tk.Label(popup, text=msg, font="TkFixedFont", anchor="w", justify="left")
+        label_4.pack(pady=4)
+
         close_button = tk.Button(popup, text="Okay", command=popup.destroy)
-        close_button.pack()
+        close_button.pack(pady=20)
         
         # center the popup
         popup.update_idletasks()
@@ -126,6 +146,12 @@ class App:
             file_menu.add_command(label="{}x{}".format(i, i), command=lambda size=i: self.on_new_game(size) )
 
         file_menu.add_separator()
+        
+        file_menu.add_command(label="New Game", command=lambda: self.on_new_game(self.last_size))
+        file_menu.add_command(label="Get Hint", command=lambda: self.get_hint() )
+
+        file_menu.add_separator()
+        
         file_menu.add_command(label="Quit", command=lambda: self.on_quit() )
         menubar.add_cascade(label="File", menu=file_menu) 
         
@@ -182,7 +208,14 @@ class App:
         self.draw_canvas()
     
     def get_hint(self):
-        self.hint_coords = self.gm.get_hint()
+        if self.hint_coords:
+            # make move
+            i1, j1 = self.hint_coords[0]
+            i2, j2 = self.hint_coords[1]
+            self.gm.make_move(i1, j1, i2, j2)
+            self.hint_coords = []
+        else:
+            self.hint_coords = self.gm.get_hint()
         self.draw_canvas()
 
     def on_game_over(self):
@@ -232,6 +265,8 @@ class App:
         
         self.root.bind('<Control-minus>', lambda event: self.zoom_out() )
         self.root.bind('<Control-equal>', lambda event: self.zoom_in() )
+        
+        self.root.bind('<Control-n>', lambda event: self.on_new_game(self.last_size) )
         self.root.bind('<Control-h>', lambda event: self.get_hint() )
 
         self.canvas.focus_set()
@@ -342,6 +377,8 @@ class App:
         self.root.geometry("{}x{}".format(w, h) )
 
     def on_new_game(self, size: int):
+        self.last_size = size 
+
         # reset game vars
         self.clicked_square = None 
         self.seen_game_over = 0 
