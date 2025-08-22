@@ -60,6 +60,8 @@ class Engine:
         return 
 
     def make_move(self, i1: int, j1: int, i2: int, j2: int) -> None:
+        print("in make move")
+
         # bounds check
         if (i1 < 0 or i2 < 0 or i1 >= self.numRows or i2 >= self.numRows):
             return 
