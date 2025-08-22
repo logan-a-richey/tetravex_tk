@@ -90,22 +90,30 @@ class Engine:
         for i in range(self.numRows):
             for j in range(offset, self.numCols):
                 block = self.grid[i][j]
+                
                 if not block.active:
                     continue
+                
                 for direction, block_dir, other_dir in zip(directions, block_dirs, other_dirs):
                     i2 = i + direction[0] 
                     j2 = j + direction[1]
+                    
                     # bounds check
                     if (i2 < 0 or i2 >= self.numRows):
                         continue
                     if (j2 < offset or j2 >= self.numCols):
                         continue
+                    
                     other = self.grid[i2][j2]
+                    if (not other.active):
+                        continue
+
                     block_val = getattr(block, block_dir)
                     other_val = getattr(other, other_dir)
                     if (block_val != other_val):
                         wrong_coords.append( (i, j) )
                         break
+
         return wrong_coords
     
     def get_hint_coords(self) -> List[Tuple[int, int]]:
@@ -114,8 +122,10 @@ class Engine:
                 b = self.grid[i][j] 
                 if not b.active:
                     continue
-                if (b.i != b.ci and b.j != b.cj):
-                    return [ (b.i, b.j), (b.ci, b.cj) ]
+                correct = (b.i == b.ci and b.j == b.cj)
+                if not correct:
+                    hint_coords = [ (b.i, b.j), (b.ci, b.cj) ]
+                    return hint_coords 
         return []
 
     def is_solved(self) -> bool:

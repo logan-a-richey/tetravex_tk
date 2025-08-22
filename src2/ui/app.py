@@ -3,11 +3,10 @@
 import tkinter as tk 
 
 from engine import Engine
-from theme_manager import ThemeManager
-from popups import *
-from my_canvas import MyCanvas 
+from ui.theme_manager import ThemeManager
+from ui.popups import *
+from ui.my_canvas import MyCanvas 
 
-from abc import ABC, abstractmethod
 from typing import Optional, Tuple, List
 
 class App:
@@ -42,7 +41,8 @@ class App:
 
     def on_win_popup(self) -> None:
         self.win_popup.open_popup()
-
+    
+    # --- Window config ---
     def resize_window(self):
         tile_size = self.my_canvas.tile_size
         margin = self.my_canvas.grid_margin

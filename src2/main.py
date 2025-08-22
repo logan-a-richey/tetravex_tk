@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
-from app import App 
+import sys
+sys.dont_write_bytecode = True
+
+# main gui application
+from ui.app import App 
 
 def main():
     app = App()

@@ -3,7 +3,7 @@
 import tkinter as tk
 from abc import ABC, abstractmethod
 
-class Popup:
+class Popup(ABC):
     def __init__(self, app):
         self.app = app
     
@@ -137,7 +137,7 @@ class WinPopup(Popup):
     def open_popup(self):
         popup = tk.Toplevel(self.app.root)
         popup.title("Game over")
-        popup.geometry("200x200")
+        popup.geometry("300x200")
 
         msg = '\n'.join([ "You completed the puzzle!", "Congrats!" ])
         label = tk.Label(popup, text=msg).pack(pady=20)

@@ -13,10 +13,6 @@ class MyCanvas:
         self.tile_size: int = 100
         self.grid_margin: int = self.tile_size // 2
         
-        # self.on_make_move: Callable[[int, int, int, int], None] = self.app.on_make_move 
-        # self.on_get_hint: Callable[[], Tuple[int, int]] = self.app.on_get_hint 
-        self.resize_window = self.app.resize_window 
-
         self.clicked_tile: Optional[Tuple[int, int]] = None
         self.hint_tiles: List[Tuple[int, int]] = []
         self.bad_tiles: List[Tuple[int, int]] = [] 
@@ -26,13 +22,12 @@ class MyCanvas:
         
         self.canvas.bind('<Button-1>', lambda event: self.on_canvas_click(event) ) 
         
-        # TODO
-        # self.root.bind('<Escape>', lambda event: self.app.on_quit() ) 
+        self.root.bind('<Escape>', lambda event: self.app.on_quit() ) 
         
         self.root.bind('<Control-minus>', lambda event: self.on_zoom_out() )
         self.root.bind('<Control-equal>', lambda event: self.on_zoom_in() )
         
-        self.root.bind('<Control-n>', lambda event: self.on_new_game(self.last_size) )
+        self.root.bind('<Control-n>', lambda event: self.app.on_new_game(self.app.last_size) )
         self.root.bind('<Control-h>', lambda event: self.on_get_hint() )
 
         self.canvas.focus_set()
@@ -206,20 +201,34 @@ class MyCanvas:
                 
                 # draw grid outline
                 outline_color = current_colors.get('outline', '#000000')
-                if (i, j) in self.bad_tiles:
-                   outline_color = "#ff0000"
-                elif (i, j) in self.hint_tiles:
-                   outline_color = "#00ff00"
-                
                 self.canvas.create_rectangle(x0, y0, x1, y1, fill='', outline=outline_color, width=2)
+
+        # draw overlays
+        for i in range(numRows):
+            for j in range(numCols):
+                x0 = j * tile 
+                y0 = i * tile 
+                if j >= numCols // 2:
+                    x0 += self.grid_margin
+                x1 = x0 + tile
+                y1 = y0 + tile
+
+                outline_color = "" 
+                if (i, j) in self.bad_tiles:
+                    outline_color = "#ff0000"
+                if (i, j) in self.hint_tiles:
+                    outline_color = "#00ff00"
+                
+                if self.app.enable_bad_rect and outline_color:
+                    self.canvas.create_rectangle(x0, y0, x1, y1, fill='', outline=outline_color, width=4)
 
     def on_zoom_in(self):
         MAX_SIZE = 200
         self.tile_size = min(MAX_SIZE, self.tile_size + 10)
-        self.resize_window()
+        self.app.resize_window()
     
     def on_zoom_out(self):
         MIN_SIZE = 50
         self.tile_size = max(MIN_SIZE, self.tile_size - 10)
-        self.resize_window()
+        self.app.resize_window()
 
