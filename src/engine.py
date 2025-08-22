@@ -1,189 +1,155 @@
-# engine.py 
+# engine.py
 
-import random
-
-from typing import List, Tuple
+import random 
+from typing import List, Tuple, Optional
 
 class Block:
-    def __init__(self, i, j, uid=0):
-        # block coordinates
-        self.i = i
-        self.j = j 
-        
-        self.uid = uid 
+    def __init__(self, i, j):
+        self.i, self.j = i, j
+        self.n, self.e, self.s, self.w = 0, 0, 0, 0
+        self.ci = 0
+        self.cj = 0
+        self.active = False 
 
-        # edge values
-        self.n = 0
-        self.e = 0
-        self.s = 0
-        self.w = 0
-
-        self.enable = 0
-    
     def to_str(self):
-        if self.enable:
-            return '{}{}{}{}'.format(self.n, self.e, self.s, self.w)
+        if self.active:
+            return "{}{}{}{}".format(self.n, self.e, self.s, self.w)
         else:
             return "...."
 
 class Engine:
-    ''' Tetravex game logic '''
     def __init__(self):
-        self.gm = None 
-        self.size = 3
-        self.block_to_solution = {}
+        self.numRows = 3 
+        self.numCols = 6 
+        self.grid: Optional[List[List["Block"]]] = None
 
-    def new_game(self, size: int):
-        self.size = size
-        self.grid = [[Block(row, col, uid=row*size+col) for col in range(size * 2)] for row in range(size) ]
-        
+    def new_grid(self, size: int) -> None:
+        self.numRows = size 
+        self.numCols = size * 2 
+        self.grid = [[Block(i, j) for j in range(self.numCols)] for i in range(self.numRows)]
         blocks = []
-            
         for i in range(size):
             for j in range(size):
-                b = self.grid[i][j] 
-                b.enable = 1
-
-                b.n, b.e, b.s, b.w = [random.randint(0, 9) for _ in range(4) ]
+                b = self.grid[i][j]
+                b.active = True
+                b.n, b.e, b.s, b.w = [random.randint(0, 9) for _ in range(4)]
+                b.ci = i
+                b.cj = j + size
+                # bounds check - set matching edges
                 if (i > 0):
-                    b2 = self.grid[i-1][j]
-                    b.n = b2.s
+                    a = self.grid[i-1][j]
+                    b.n = a.s 
                 if (j > 0):
-                    b2 = self.grid[i][j-1]
-                    b.w = b2.e
-
+                    a = self.grid[i][j-1]
+                    b.w = a.e 
                 blocks.append(b)
-        
-        self.block_to_solution = {}
-        for b in blocks:
-            self.block_to_solution[b.uid] = [b.i, b.j + size]
-
         random.shuffle(blocks)
-        
-        for idx, block in enumerate(blocks):
-            i = idx // self.size 
-            j = idx % self.size
-            self.grid[i][j] = block
-            block.i, block.j = i, j  # keep actual position updated
-        
-    def make_move(self, i1, j1, i2, j2):
-        # swap blocks
-        self.grid[i1][j1], self.grid[i2][j2] = self.grid[i2][j2], self.grid[i1][j1]
+        for idx, b in enumerate(blocks):
+            i = idx // size
+            j = idx % size 
+            b.i, b.j = i, j
+            self.grid[i][j] = b 
+        return 
 
-        # update their stored coordinates
-        self.grid[i1][j1].i, self.grid[i1][j1].j = i1, j1
-        self.grid[i2][j2].i, self.grid[i2][j2].j = i2, j2
-   
     def print_grid(self):
-        numRows = len(self.grid)
-        numCols = len(self.grid[0])
-
-        for i in range(numRows):
-            for j in range(numCols):
+        for i in range(self.numRows):
+            for j in range(self.numCols):
                 b = self.grid[i][j] 
-                print(b.to_str(), end=' ')
-            print() 
-        return 
-    
-    def print_grid_as_uid(self):
-        numRows = len(self.grid)
-        numCols = len(self.grid[0])
-
-        for i in range(numRows):
-            for j in range(numCols):
-                b = self.grid[i][j] 
-                if b.enable:
-                    print(str(b.uid).rjust(2), end=' ')
-                else:
-                    print('..', end=' ')
-            print() 
+                print(b.to_str(), end=" ")
+            print()
         return 
 
-    def get_wrong_coords(self):
-        size = self.size
-        offset = size  # playable region starts here
-        wrong_coords = [] 
+    def make_move(self, i1: int, j1: int, i2: int, j2: int) -> None:
+        # bounds check
+        if (i1 < 0 or i1 >= self.numRows):
+            print("[E] i1 out of range")
+            return 
+        if (i2 < 0 or i2 >= self.numRows):
+            print("[E] i2 out of range")
+            return 
+        if (j1 < 0 or j1 >= self.numCols):
+            print("[E] j1 out of range")
+            return 
+        if (j2 < 0 or j2 >= self.numCols):
+            print("[E] j2 out of range")
+            return 
+        
+        # swap blocks
+        self.grid[i1][j1], self.grid[i2][j2] = self.grid[i2][j2], self.grid[i1][j1] 
+        self.grid[i1][j1].i = i1 
+        self.grid[i1][j1].j = j1 
+        self.grid[i2][j2].i = i2 
+        self.grid[i2][j2].j = j2 
 
-        for i in range(size):
-            for j in range(offset, offset + size):
-                b = self.grid[i][j]
+    def get_wrong_coords(self) -> List[Tuple[int, int]]:
+        wrong_coords = []
+        offset = self.numRows 
+        directions = [ [-1, 0], [1, 0], [0, 1], [0, -1] ]
+        block_dirs = ['n', 's', 'e', 'w']
+        other_dirs = ['s', 'n', 'w', 'e']
+        for i in range(self.numRows):
+            for j in range(offset, self.numCols):
+                block = self.grid[i][j]
                 
-                if not (b.enable):
+                if not block.active:
                     continue
-
-                # check west neighbor
-                if j > offset:
-                    b2 = self.grid[i][j - 1]
-                    if (b2.enable and b.w != b2.e):
-                        is_solved = 0 
-                        wrong_coords.append( [i, j] )
-                        continue
-
-                # check east neighbor
-                if j < offset + size - 1:
-                    b2 = self.grid[i][j + 1]
-                    if (b2.enable and b.e != b2.w):
-                        wrong_coords.append( [i, j] )
-                        continue
-
-                # check north neighbor
-                if i > 0:
-                    b2 = self.grid[i - 1][j]
-                    if (b2.enable and b.n != b2.s):
-                        wrong_coords.append( [i, j] )
-                        continue
-
-                # check south neighbor
-                if i < size - 1:
-                    b2 = self.grid[i + 1][j]
-                    if (b2.enable and b.s != b2.n):
-                        wrong_coords.append( [i, j] )
-                        continue
-
-        return wrong_coords   
-
-    def is_game_over(self):
-        size = self.size
-        offset = size  # playable region starts here
-
-        for i in range(size):
-            for j in range(offset, offset + size):
-                b = self.grid[i][j]
                 
-                if not (b.enable):
-                    return False 
+                for direction, block_dir, other_dir in zip(directions, block_dirs, other_dirs):
+                    i2 = i + direction[0] 
+                    j2 = j + direction[1]
+                    
+                    # bounds check
+                    if (i2 < 0 or i2 >= self.numRows):
+                        continue
+                    if (j2 < offset or j2 >= self.numCols):
+                        continue
+                    
+                    other = self.grid[i2][j2]
+                    if (not other.active):
+                        continue
 
-                # check west neighbor
-                if j > offset:
-                    left = self.grid[i][j - 1]
-                    if b.w != left.e: 
-                        return False 
+                    block_val = getattr(block, block_dir)
+                    other_val = getattr(other, other_dir)
+                    if (block_val != other_val):
+                        wrong_coords.append( (i, j) )
+                        break
 
-                # check east neighbor
-                if j < offset + size - 1:
-                    right = self.grid[i][j + 1]
-                    if b.e != right.w:
-                        return False 
-
-                # check north neighbor
-                if i > 0:
-                    top = self.grid[i - 1][j]
-                    if b.n != top.s:
-                        return False 
-
-                # check south neighbor
-                if i < size - 1:
-                    bottom = self.grid[i + 1][j]
-                    if b.s != bottom.n:
-                        return False 
-
-        return True   
-
-    def get_hint(self):
-        for row in self.grid:
-            for b in row:
-                if b.enable:
-                    ci, cj = self.block_to_solution[b.uid]
-                    if (b.i != ci or b.j != cj):
-                        return [ (b.i, b.j), (ci, cj) ]
+        return wrong_coords
+    
+    def get_hint_coords(self) -> List[Tuple[int, int]]:
+        for i in range(self.numRows):
+            for j in range(self.numCols):
+                b = self.grid[i][j] 
+                if not b.active:
+                    continue
+                correct = (b.i == b.ci and b.j == b.cj)
+                if not correct:
+                    hint_coords = [ (b.i, b.j), (b.ci, b.cj) ]
+                    return hint_coords 
         return []
+
+    def is_solved(self) -> bool:
+        offset = self.numRows 
+        directions = [ [-1, 0], [1, 0], [0, 1], [0, -1] ]
+        block_dirs = ['n', 's', 'e', 'w']
+        other_dirs = ['s', 'n', 'w', 'e']
+        for i in range(self.numRows):
+            for j in range(offset, self.numCols):
+                block = self.grid[i][j]
+                if not block.active:
+                    return False
+                for direction, block_dir, other_dir in zip(directions, block_dirs, other_dirs):
+                    i2 = i + direction[0] 
+                    j2 = j + direction[1]
+                    # bounds check
+                    if (i2 < 0 or i2 >= self.numRows):
+                        continue
+                    if (j2 < offset or j2 >= self.numCols):
+                        continue
+                    other = self.grid[i2][j2]
+                    block_val = getattr(block, block_dir)
+                    other_val = getattr(other, other_dir)
+                    if (block_val != other_val):
+                        return False
+        return True 
+    

@@ -153,8 +153,15 @@ class MyCanvas:
             text_color = self.get_font_color(tri_color)
             if dimmed:
                 tri_color = self.dim_color(tri_color)
-
-            self.canvas.create_polygon(tri_pts, fill=tri_color, width=2, outline='#000000')
+            
+            outline_color = current_colors.get('outline', '#000000')
+            self.canvas.create_polygon(
+                tri_pts, 
+                fill=tri_color, 
+                width=1, 
+                outline=outline_color
+            )
+            
             self.canvas.create_text(
                 *text_pos, 
                 text=str(val), 

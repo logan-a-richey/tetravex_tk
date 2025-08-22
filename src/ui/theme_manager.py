@@ -80,7 +80,21 @@ class ThemeManager:
             "grid_bg": "#D2B48C" # tan
 
         })
-        theme3 = CustomTheme(name="Stencil", colors={
+        theme3 = CustomTheme(name="Stencil Light", colors={
+            0: "#e0e0e0", 
+            1: "#e0e0e0", 
+            2: "#e0e0e0", 
+            3: "#e0e0e0", 
+            4: "#e0e0e0", 
+            5: "#e0e0e0", 
+            6: "#e0e0e0", 
+            7: "#e0e0e0", 
+            8: "#e0e0e0", 
+            9: "#e0e0e0", 
+            "outline" : "#000000",
+            "grid_bg": "#505050"
+        })
+        theme4 = CustomTheme(name="Stencil Dark", colors={
             0: "#000000", 
             1: "#000000", 
             2: "#000000", 
@@ -95,9 +109,9 @@ class ThemeManager:
             "grid_bg": "#707070"
         })
 
-        theme4 = RandomTheme()
+        theme5 = RandomTheme()
 
-        theme_lst = [theme1, theme2, theme3, theme4]
+        theme_lst = [theme1, theme2, theme3, theme4, theme5]
         for theme in theme_lst:
             self.themes[theme.name] = theme 
 
@@ -109,4 +123,6 @@ class ThemeManager:
 
     def set(self, text):
         self.current_theme = self.themes.get(text, self.default_theme)
+        self.current_theme.get_colors()
+
 

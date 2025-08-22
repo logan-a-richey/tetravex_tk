@@ -62,7 +62,10 @@ class App:
         file_menu = tk.Menu(menubar, tearoff=0)
         MAX_PUZZLE_SIZE = 8
         for i in range(2, MAX_PUZZLE_SIZE + 1):
-            file_menu.add_command(label="{}x{}".format(i, i), command=lambda size=i: self.on_new_game(size) )
+            file_menu.add_command(
+                label="{}x{}".format(i, i), 
+                command=lambda size=i: self.on_new_game(size) 
+            )
 
         file_menu.add_separator()
         

@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
-from game_manager import GameManager 
+import sys
+sys.dont_write_bytecode = True
+
+# main gui application
+from ui.app import App 
 
 def main():
-    gm = GameManager() 
-    gm.run()
+    app = App()
+    app.run()
 
 if __name__ == "__main__":
     main()
+

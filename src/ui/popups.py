@@ -40,10 +40,10 @@ class PrefsPopup(Popup):
     def on_radio_change(self):
         text = self.radio_var.get()
         self.app.theme_manager.set(text)
+        
         self.app.on_canvas_draw()
     
     def on_checkbox_change(self):
-        print("on checkbox change")
         val = self.checkbox_var.get()
         self.app.enable_bad_rect = val
         self.app.on_canvas_draw()
