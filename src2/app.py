@@ -9,11 +9,12 @@ from typing import Optional, Tuple, List
 
 class App:
     def __init__(self):
-        self.root = tk.Tk()     # tkinter gui
-        self.root.title = "Tetravex GUI App"
+        # contains all of the game logic
+        self.engine = Engine()  
 
-        self.engine = Engine()  # contains all of the game logic
+        # settings
         self.theme_manager = ThemeManager() 
+        self.enable_bad_rect = True
 
         # game variables
         self.last_size = 3
@@ -21,11 +22,11 @@ class App:
         self.grid_margin = self.tile_size // 2
         self.seen_win = False 
         
-        self.current_theme = self.theme_manager.get_default_theme()
-        self.enable_bad_rect = True
-
+        # finish tk setup 
+        self.root = tk.Tk()
+        self.root.title("Tetravex GUI App")
         self.setup_widgets()
-        self.on_new_game()
+        self.on_new_game(size=3)
     
     # --- Init Widgets ---
     def setup_widgets(self):
@@ -69,6 +70,10 @@ class App:
         self.on_canvas_draw()
 
     def on_new_game(self, size=3):
+        # bound check the size
+        size = max(2, size)
+        size = min(8 ,size)
+
         # set game vars
         self.last_size = size 
         self.seen_win = False
@@ -90,100 +95,57 @@ class App:
         x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (popup.winfo_width() // 2)
         y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (popup.winfo_height() // 2)
         popup.geometry("+{}+{}".format(x, y))
-
-    def on_about_popup(self) -> None:
-        popup = tk.Toplevel(self.root)
-        popup.title("About")
-        popup.geometry("500x400")
-
-        label_1 = tk.Label(popup, text="How to play", bg='#777777', font=("Arial", 16))
-        label_1.pack(pady=4)
-
-        msg = '\n'.join([
-            'This is a clone of the game Tetravex',
-            'Click 2 coordinates to swap blocks.',
-            'The goal is to move all of the blocks from the left grid to the right grid,',
-            'such that all adjacent edges are matching in value.',
-            'Try to do it in as few moves possible!'
-        ])
-
-        label_2 = tk.Label(popup, text=msg)
-        label_2.pack(pady=4)
-
-        label_3 = tk.Label(popup, text="Controls", bg='#777777', font=("Arial", 16))
-        label_3.pack(pady=4)
-
-        msg = '\n'.join([
-            'CTRL N : New game',
-            'CTRL H : Get hint',
-            'CTRL - : Zoom out',
-            'CTRL = : Zoom in',
-            'ESCAPE : Quit program'
-        ])
-        label_4 = tk.Label(popup, text=msg, font="TkFixedFont", anchor="w", justify="left")
-        label_4.pack(pady=4)
-
-        close_button = tk.Button(popup, text="Okay", command=popup.destroy)
-        close_button.pack(pady=20)
-        
-        self.center_popup(popup)
     
-    # TODO
-    def on_prefs_popup(self):
+    def on_prefs_popup(self) -> None:
         popup = tk.Toplevel(self.root)
         popup.title("Preferences Window")
         popup.geometry("400x400")
 
-        # --- Radio Widget ---
-        tk.Label(popup, text="Color Theme:").pack(pady=5)
-         
+        # **************************************************
+        
+        tk.Label(popup, text="Color Theme").pack(pady=4)
         valid_choices = list(self.theme_manager.themes.keys())
-        radvar = tk.StringVar(value=self.current_theme)
-    
+
+        current_theme = self.theme_manager.get()
+        radio_var = tk.StringVar(value=current_theme.name)
         def on_radio_change():
-            text = radvar.get()
-            self.current_theme = text 
-            print("on radio change: {}".format(text)) 
+            print("on radio change")
+            text = radio_var.get()
+            self.theme_manager.set(text)
             self.on_canvas_draw()
-            return 
 
         for choice in valid_choices:
-            tk.Radiobutton( popup, text=choice, variable=radvar, value=choice, command=on_radio_change).pack(pady=4)
-
-        # --- Checkbox widget ---- 
-        checkbox_var = tk.BooleanVar(value=getattr(self, "show_wrong_tile", False))
-
+            tk.Radiobutton(
+                popup,
+                text=choice,
+                variable=radio_var,
+                value=choice,
+                command=on_radio_change,
+            ).pack(pady=4)
+       
+        # **************************************************
+        
+        checkbox_var = tk.BooleanVar(value=self.enable_bad_rect) 
         def on_checkbox_change():
-            var = checkbox_var.get()
-            print("on checkbox change: {}".format(var))
-            self.enable_bad_rect = var
+            print("on checkbox change")
+            val = checkbox_var.get()
+            self.enable_bad_rect = val
             self.on_canvas_draw()
-            return 
 
-        tk.Checkbutton( popup, text="Show wrong tile outline", variable=checkbox_var, command=on_checkbox_change).pack(pady=20)
+        
+        tk.Checkbutton(popup, text="Enable Bad Rect Outline", variable=checkbox_var, command=on_checkbox_change).pack(pady=20)
 
-        # --- Okay button ---
+        # **************************************************
+        
         tk.Button(popup, text="Okay", command=popup.destroy).pack(pady=5)
         
         self.center_popup(popup)
-    
-    def on_win_popup(self):
-        popup = tk.Toplevel(self.root)
-        popup.title("Game over")
-        popup.geometry("300x300")
 
-        msg = '\n'.join([
-            "You completed the puzzle!",
-            "Congrats!"
-        ])
+    def on_about_popup(self) -> None:
+        return
 
-        label = tk.Label(popup, text=msg)
-        label.pack(pady=20)
-        
-        close_button = tk.Button(popup, text="Okay", command=popup.destroy)
-        close_button.pack()
-
-        self.center_popup(popup)
+    def on_win_popup(self) -> None:
+        pass
 
     # --- Window Config Functions --- 
     def on_zoom_in(self):
@@ -208,7 +170,7 @@ class App:
         self.canvas = tk.Canvas(self.root, bg="#707070")
         self.canvas.pack(side='top', fill='both', expand=True)
         
-        self.canvas.bind('<Button-1>', lambda event: self.on_button1_event(event) ) 
+        self.canvas.bind('<Button-1>', lambda event: self.on_canvas_click(event) ) 
         self.root.bind('<Escape>', lambda event: self.on_quit() ) 
         
         self.root.bind('<Control-minus>', lambda event: self.on_zoom_out() )
@@ -223,7 +185,7 @@ class App:
         return
 
     def on_canvas_click(self, event):
-        coords = self.get_mouse_coordinates()
+        coords = self.get_mouse_coordinates(event)
     
     def draw_block(self):
         pass 
