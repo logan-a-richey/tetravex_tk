@@ -60,21 +60,26 @@ class Engine:
         return 
 
     def make_move(self, i1: int, j1: int, i2: int, j2: int) -> None:
-        print("in make move")
-
         # bounds check
-        if (i1 < 0 or i2 < 0 or i1 >= self.numRows or i2 >= self.numRows):
+        if (i1 < 0 or i1 >= self.numRows):
+            print("[E] i1 out of range")
             return 
-        if (j1 < 0 or j2 < 0 or j1 >= self.numCols or j2 >= self.numCols):
+        if (i2 < 0 or i2 >= self.numRows):
+            print("[E] i2 out of range")
             return 
-        b1 = self.grid[i1][j1]
-        b2 = self.grid[i2][j2] 
-        # swap references
-        b1, b2 = b2, b1 
-        # set references 
-        b1.i, b2.j = i1, j1
-        b2.i, b2.j = i2, j2
-        return
+        if (j1 < 0 or j1 >= self.numCols):
+            print("[E] j1 out of range")
+            return 
+        if (j2 < 0 or j2 >= self.numCols):
+            print("[E] j2 out of range")
+            return 
+        
+        # swap blocks
+        self.grid[i1][j1], self.grid[i2][j2] = self.grid[i2][j2], self.grid[i1][j1] 
+        self.grid[i1][j1].i = i1 
+        self.grid[i1][j1].j = j1 
+        self.grid[i2][j2].i = i2 
+        self.grid[i2][j2].j = j2 
 
     def get_wrong_coords(self) -> List[Tuple[int, int]]:
         wrong_coords = []
@@ -102,6 +107,16 @@ class Engine:
                         wrong_coords.append( (i, j) )
                         break
         return wrong_coords
+    
+    def get_hint_coords(self) -> List[Tuple[int, int]]:
+        for i in range(self.numRows):
+            for j in range(self.numCols):
+                b = self.grid[i][j] 
+                if not b.active:
+                    continue
+                if (b.i != b.ci and b.j != b.cj):
+                    return [ (b.i, b.j), (b.ci, b.cj) ]
+        return []
 
     def is_solved(self) -> bool:
         offset = self.numRows 

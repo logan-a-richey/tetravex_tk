@@ -29,14 +29,18 @@ class RandomTheme(Theme):
 
     def get_colors(self):
         colors = {}
-        rgb = [random.randint(50, 200) for _ in range(3)]
+        
         for i in range(10):
+            rgb = [random.randint(50, 200) for _ in range(3)]
             colors[i] = "#{:02x}{:02x}{:02x}".format(*rgb)
-
+        
         colors["outline"] = "#000000"
         colors["grid_bg"] = "#D2B48C"
+        
         self.colors = colors
+
         return colors
+
 
 class ThemeManager:
     def __init__(self):
@@ -100,8 +104,6 @@ class ThemeManager:
         self.default_theme = theme1
         self.current_theme = self.default_theme 
 
-        print(type(self.current_theme))
-    
     def get(self):
         return self.current_theme 
 
