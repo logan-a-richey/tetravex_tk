@@ -42,7 +42,6 @@ class App(tk.Frame):
     # --- Window config ---
     def resize_window(self, w, h):
         self.root.geometry("{}x{}".format(w, h) )
-        self.refresh()
     
     def on_zoom_in(self):
         MAX_SIZE = 200

@@ -115,4 +115,11 @@ class Mediator:
 
         self.engine.new_game(size)
 
+        tile_size = self.app.canvas.tile_size
+        margin = self.app.canvas.grid_margin 
+
+        w = self.engine.numCols * tile_size + margin
+        h = self.engine.numRows * tile_size
+        
+        self.app.resize_window(w, h)
         self.refresh()

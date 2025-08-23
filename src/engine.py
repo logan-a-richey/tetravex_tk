@@ -59,16 +59,15 @@ class Engine:
         self.print_board() 
 
         random.shuffle(blocks)
-
-        print("after")
-        self.print_board() 
-        
         for idx, b in enumerate(blocks):
             i = idx // size 
             j = idx % size 
             self.grid[i][j] = b
             self.grid[i][j].i = i 
             self.grid[i][j].j = j 
+        
+        print("after")
+        self.print_board() 
     
     def block_to_str(self, b: Block) -> str:
         if b.active:
