@@ -2,58 +2,59 @@
 
 import tkinter as tk 
 
-from engine import Engine
-from ui.theme_manager import ThemeManager
 from ui.popups import *
 from ui.my_canvas import MyCanvas 
 
-from typing import Optional, Tuple, List
+class App(tk.Frame):
+    def __init__(self, root, mediator):
+        super().__init__(root)
+        self.root = root
+        self.mediator = mediator
+        
+        self.pack()
+        
+        self.canvas = MyCanvas(
+            root,
+            mediator.handle_click,
+            mediator.theme_manager
+        )
 
-class App:
-    def __init__(self):
-        # contains all of the game logic
-        self.engine = Engine()  
+        self.prefs_popup = PrefsPopup(
+            root,
+            mediator.theme_manager, 
+            mediator.enable_bad_rect,
+            mediator.refresh
+        )
 
-        # settings
-        self.theme_manager = ThemeManager() 
-        self.enable_bad_rect = True
-        self.last_size: int = 3
-        self.seen_win: bool = False 
+        self.about_popup = AboutPopup(root)
+        self.win_popup = WinPopup(root)
+        
+        self.root.bind('<Control-minus>', lambda event: self.on_zoom_out() )
+        self.root.bind('<Control-equal>', lambda event: self.on_zoom_in() )
+        self.root.bind('<Escape>', lambda event: self.root.quit() ) 
 
-        # finish tk setup 
-        self.root = tk.Tk()
-        self.root.title("Tetravex GUI App")
+        # TODO 
+        # self.root.bind('<Control-n>', lambda event: self.app.on_new_game(self.app.last_size) )
+        # self.root.bind('<Control-h>', lambda event: self.on_get_hint() )
         
         self.setup_menubar()
-        self.my_canvas = MyCanvas(self)
-        self.prefs_popup = PrefsPopup(self)
-        self.about_popup = AboutPopup(self)
-        self.win_popup = WinPopup(self)
 
-        self.on_new_game(size=3)
-    
-    # --- Popup Functions --- 
-    def on_prefs_popup(self) -> None:
-        self.prefs_popup.open_popup()
-
-    def on_about_popup(self) -> None:
-        self.about_popup.open_popup()
-
-    def on_win_popup(self) -> None:
-        self.win_popup.open_popup()
-    
     # --- Window config ---
-    def resize_window(self):
-        tile_size = self.my_canvas.tile_size
-        margin = self.my_canvas.grid_margin
-        numRows = self.engine.numRows
-        numCols = self.engine.numCols
-
-        screen_w = tile_size * numCols + margin * 2
-        screen_h = tile_size * numRows + margin
-        self.root.geometry("{}x{}".format(screen_w, screen_h) )
-        self.on_canvas_draw()
+    def resize_window(self, w, h):
+        self.root.geometry("{}x{}".format(w, h) )
+        self.refresh()
     
+    def on_zoom_in(self):
+        MAX_SIZE = 200
+        self.tile_size = min(MAX_SIZE, self.tile_size + 10)
+        self.resize_window()
+    
+    def on_zoom_out(self):
+        MIN_SIZE = 50
+        self.tile_size = max(MIN_SIZE, self.tile_size - 10)
+        self.resize_window()
+
+    # --- Menubar ---  
     def setup_menubar(self):
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -62,54 +63,26 @@ class App:
         file_menu = tk.Menu(menubar, tearoff=0)
         MAX_PUZZLE_SIZE = 8
         for i in range(2, MAX_PUZZLE_SIZE + 1):
-            file_menu.add_command(
-                label="{}x{}".format(i, i), 
-                command=lambda size=i: self.on_new_game(size) 
-            )
-
+            msg = "New {}x{} Puzzle".format(i, i)
+            file_menu.add_command(label=msg, command=lambda size=i: self.mediator.handle_new_game(size=size))
         file_menu.add_separator()
-        
-        file_menu.add_command(label="Quit", command=lambda: self.on_quit() )
+        file_menu.add_command(label="Quit", command=lambda: self.root.quit() )
         menubar.add_cascade(label="File", menu=file_menu) 
-        
+
+        # --- Game Menu ---
+        game_menu = tk.Menu(menubar, tearoff=0) 
+        game_menu.add_command(label="Get Hint", command=self.mediator.handle_hint)
+        game_menu.add_command(label="Undo Move", command=self.mediator.handle_undo)
+        game_menu.add_command(label="Redo Move", command=self.mediator.handle_redo)
+        menubar.add_cascade(label="Game", menu=game_menu)
+
         # --- Prefs Menu ---
         prefs_menu = tk.Menu(menubar, tearoff=0)
-        prefs_menu.add_command(label="Open Prefs", command=self.on_prefs_popup)
+        prefs_menu.add_command(label="Open Prefs", command=self.prefs_popup.open_popup)
         menubar.add_cascade(label="Prefs", menu=prefs_menu)
 
         # --- About Menu ---
         about_menu = tk.Menu(menubar, tearoff=0)
-        about_menu.add_command(label="Open About", command=self.on_about_popup)
+        about_menu.add_command(label="Open About", command=self.about_popup.open_popup)
         menubar.add_cascade(label="About", menu=about_menu)
-
-    # --- Game Event Functions ---
-    def on_new_game(self, size=3):
-        # bound check the size
-        size = max(2, size)
-        size = min(8, size)
-
-        # set game vars
-        self.last_size = size 
-        self.seen_win = False
-
-        # call methods
-        self.engine.new_grid(self.last_size)
-        self.resize_window()
-        self.on_canvas_draw()
     
-    def on_canvas_draw(self):
-        self.my_canvas.on_canvas_draw()
-    
-    def on_win(self):
-        if self.seen_win:
-            return
-        self.seen_win = True
-        self.on_win_popup()
-    
-    # --- Main functions ---
-    def run(self):
-        self.root.mainloop()
-    
-    def on_quit(self):
-        self.root.quit()
-

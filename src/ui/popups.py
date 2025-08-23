@@ -4,9 +4,9 @@ import tkinter as tk
 from abc import ABC, abstractmethod
 
 class Popup(ABC):
-    def __init__(self, app):
-        self.app = app
-    
+    def __init__(self, root):
+        self.root = root
+
     @abstractmethod
     def open_popup(self):
         raise NotImplementedError 
@@ -14,10 +14,10 @@ class Popup(ABC):
     def center_popup(self, popup) -> None:
         popup.update_idletasks()
         
-        app_x0 = self.app.root.winfo_x()
-        app_y0 = self.app.root.winfo_y()
-        app_w = self.app.root.winfo_width()
-        app_h = self.app.root.winfo_height()
+        app_x0 = self.root.winfo_x()
+        app_y0 = self.root.winfo_y()
+        app_w = self.root.winfo_width()
+        app_h = self.root.winfo_height()
 
         pop_w = popup.winfo_width()
         pop_h = popup.winfo_height()
@@ -29,27 +29,34 @@ class Popup(ABC):
 
 
 class PrefsPopup(Popup):
-    def __init__(self, app):
-        super().__init__(app)
+    def __init__(self, 
+        root, 
+        theme_manager: "ThemeManager", 
+        enable_bad_rect: bool, 
+        refresh: callable
+    ):
+        super().__init__(root)
+        self.theme_manager = theme_manager 
+        self.enable_bad_rect = enable_bad_rect 
+        self.refresh = refresh 
 
-        current_theme = self.app.theme_manager.get()
+        current_theme = self.theme_manager.get()
         self.radio_var = tk.StringVar(value=current_theme.name)
 
-        self.checkbox_var = tk.BooleanVar(value=self.app.enable_bad_rect) 
+        self.checkbox_var = tk.BooleanVar(value=enable_bad_rect) 
 
     def on_radio_change(self):
         text = self.radio_var.get()
         self.app.theme_manager.set(text)
-        
-        self.app.on_canvas_draw()
+        self.refresh() 
     
     def on_checkbox_change(self):
         val = self.checkbox_var.get()
-        self.app.enable_bad_rect = val
-        self.app.on_canvas_draw()
+        self.enable_bad_rect = val
+        self.refresh() 
 
     def open_popup(self):
-        popup = tk.Toplevel(self.app.root)
+        popup = tk.Toplevel(self.root)
         popup.title("Preferences Window")
         popup.geometry("400x400")
 
@@ -57,9 +64,9 @@ class PrefsPopup(Popup):
         tk.Label(popup, text="Color Theme").pack(pady=4)
         
         # --- Radio Group ---
-        valid_choices = list(self.app.theme_manager.themes.keys())
+        valid_choices = list(self.theme_manager.themes.keys())
 
-        self.current_theme = self.app.theme_manager.get()
+        self.current_theme = self.theme_manager.get()
         for choice in valid_choices:
             tk.Radiobutton( 
                 popup,
@@ -88,8 +95,8 @@ class PrefsPopup(Popup):
 
 
 class AboutPopup(Popup):
-    def __init__(self, app):
-        super().__init__(app)
+    def __init__(self, root):
+        super().__init__(root)
 
     def open_popup(self):
         popup = tk.Toplevel(self.root)
@@ -131,11 +138,11 @@ class AboutPopup(Popup):
 
 
 class WinPopup(Popup):
-    def __init__(self, app):
-        super().__init__(app)
+    def __init__(self, root):
+        super().__init__(root)
 
     def open_popup(self):
-        popup = tk.Toplevel(self.app.root)
+        popup = tk.Toplevel(self.root)
         popup.title("Game over")
         popup.geometry("300x200")
 

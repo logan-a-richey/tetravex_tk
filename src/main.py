@@ -3,12 +3,14 @@
 import sys
 sys.dont_write_bytecode = True
 
-# main gui application
-from ui.app import App 
+import tkinter as tk
+from mediator import Mediator 
 
 def main():
-    app = App()
-    app.run()
+    root = tk.Tk()
+    root.title("Tetravex")
+    mediator = Mediator(root)
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
