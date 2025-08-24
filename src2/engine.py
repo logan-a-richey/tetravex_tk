@@ -1,6 +1,8 @@
 # engine.py 
 
 from dataclasses import dataclass 
+from typing import List, Tuple
+import random 
 
 @dataclass
 class Block:
@@ -29,7 +31,11 @@ class BoardState:
 
 class Engine:
     def __init__(self):
-        self.grid = []
+        size = 3
+        num_rows = size
+        num_cols = size * 2
+
+        self.grid = [[ Block(i, j, i, j + size, 0, 0, 0, 0, False) for j in range(num_cols)] for i in range(num_rows)]
 
     def new_game(self, size: int):
         num_rows = size

@@ -2,7 +2,9 @@
 
 import tkinter as tk 
 
-class AbstractPopup:
+from abc import ABC, abstractmethod
+
+class AbstractPopup(ABC):
     def __init__(self, root, controller):
         self.root = root
         self.controller = controller
@@ -34,13 +36,13 @@ class AbstractPopup:
 class PrefsPopup(AbstractPopup):
     def __init__(self, root, controller):
         super().__init__(root, controller)
-        self.theme_manager = controller.theme_manager
+        self.settings_manager = controller.settings_manager
         
         self.refresh = self.controller.refresh()
 
-        current_settings = self.controller.get_current_settings() 
+        current_settings = self.settings_manager.get_state() 
 
-        self.radio_var_1 = tk.StringVar(current_settings.theme_name)
+        self.radio_var_1 = tk.StringVar(current_settings.theme.name)
         self.checkbox_var_1 = self.BooleanVar(current_settings.enable_bad_rect)
 
     def on_radio_1(self):

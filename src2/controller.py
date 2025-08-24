@@ -9,15 +9,15 @@ class Controller:
         self.root = root 
 
         self.engine = Engine()
-        self.settings_manager = SettingsManager()
-
-        self.main_window = MainWindow(root, self)
+        # self.settings_manager = SettingsManager()
+        # self.main_window = MainWindow(self.root, self)
         
         # setup new game
         self.on_new_game(3)
 
     def on_new_game(self, size: int):
         self.engine.new_game(size)
+        self.refresh()
     
     def on_quit(self):
         self.root.quit()
@@ -26,8 +26,10 @@ class Controller:
         print("on_click ({}, {})".format(x, y))
 
     def refresh(self):
-        board_state = self.engine.get_state()
-        settings_state = self.settings_manager.get_state() 
+        print("Controller::refresh() called")
+        
+        # board_state = self.engine.get_state()
+        # settings_state = self.settings_manager.get_state() 
+        # self.main_window.canvas.redraw(board_state, settings_state)
 
-        self.main_window.redraw(board_state, settings_state)
 

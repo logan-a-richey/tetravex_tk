@@ -6,17 +6,15 @@ import tkinter as tk
 from popups import PrefsPopup, AboutPopup, WinPopup
 from main_canvas import MainCanvas 
 
-
-
 class MainWindow(tk.Frame):
     def __init__(self, root, controller):
         self.root = root 
         self.controller = controller  
 
-        self.prefs_popup = PrefsPopup(root, controller)
-        self.about_popup = AboutPopup(root, controller)
-        self.win_popup = WinPopup(root, controller)
-        self.canavs = MainCanvas(root, controller)
+        self.prefs_popup = PrefsPopup(self.root, controller)
+        self.about_popup = AboutPopup(self.root, controller)
+        self.win_popup = WinPopup(self.root, controller)
+        self.canavs = MainCanvas(self.root, controller)
         
         self.setup_menubar()
 

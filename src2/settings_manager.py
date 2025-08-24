@@ -1,5 +1,6 @@
 # settings_manager.py 
 
+import random 
 from abc import ABC, abstractmethod 
 from dataclasses import dataclass 
 from typing import List
@@ -19,14 +20,17 @@ class Theme:
         canvas_bg=COLOR_BLACK,
         grid_bg=COLOR_TAN,
         grid_outline=COLOR_BLACK,
-        tri_colors={},
+        colors={},
         tri_outline=COLOR_BLACK,
     ):
         self.name = name
+        
         self.canvas_bg = canvas_bg
+        
         self.grid_bg = grid_bg
         self.grid_outline = grid_outline
-        self.tri_colors = tri_colors
+
+        self.colors = colors
         self.tri_outline = tri_outline
     
 class SettingsManager:
@@ -99,7 +103,7 @@ class SettingsManager:
 
     def set_theme(self, theme_name: str) -> None:
         for idx, theme in enumerate(self.themes):
-            if theme.name == theme_name
+            if theme.name == theme_name:
                 if theme.name == "Random":
                     self.themes[idx] = self.generate_random_theme()
                     self.current_theme = self.themes[idx]
