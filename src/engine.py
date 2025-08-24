@@ -23,6 +23,12 @@ class Move:
     j1: int 
     j2: int 
 
+@dataclass 
+class EngineState:
+    num_rows: int 
+    num_cols: int 
+    grid: list 
+
 class Engine:
     def __init__(self):
         self.numRows = 3
@@ -205,3 +211,7 @@ class Engine:
                     if (block_val != other_val):
                         return False
         return True 
+
+    def get_state(self):
+        state = EngineState(self.numRows, self.numCols, self.grid)
+        return state

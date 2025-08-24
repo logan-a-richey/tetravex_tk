@@ -1,19 +1,24 @@
 import tkinter as tk 
 
 from typing import Optional, Tuple
+from dataclasses import dataclass 
 
 from engine import Engine, Move
 from ui.app import App
 from ui.theme_manager import ThemeManager 
 
-class Mediator:
+class Controller:
+    _instance = None
+
     def __init__(self, root):
+        if not Controller._instance:
+            Controller._instance = self 
+        else:
+            return self.get_instance()
+
         # game logic
-        self.engine = Engine()
-        
-        # game settings
-        self.theme_manager = ThemeManager()
-        self.enable_bad_rect = True
+        self.model = Engine()
+        self.view = App(self)
 
         # game variables
         self.clicked_tile = None 
@@ -22,21 +27,15 @@ class Mediator:
         self.hints_used = 0 
         self.last_size = 3
         
-        # game gui
-        self.app = App(root, self)
-
-        # launch game
-        self.handle_new_game(size=self.last_size)
+    def get_instance(self):
+        return Controller._instance 
 
     def refresh(self):
-        self.app.canvas.refresh(
-            self.engine.grid,
-            self.clicked_tile,
-            self.wrong_coords,
-            self.hint_coords,
-            self.enable_bad_rect
-        )
-    
+        board_state = self.model.get_state()
+        settings_state = self.view.prefs_popup.get_state() 
+
+        self.view.canvas.refresh(board_state, settings_state)
+
     def get_coords(self, x: int, y: int) -> Optional[Tuple[int, int]]:
         size = self.engine.numRows
         numRows = self.engine.numRows
