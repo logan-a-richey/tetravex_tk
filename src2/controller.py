@@ -9,8 +9,8 @@ class Controller:
         self.root = root 
 
         self.engine = Engine()
-        # self.settings_manager = SettingsManager()
-        # self.main_window = MainWindow(self.root, self)
+        self.settings_manager = SettingsManager()
+        self.main_window = MainWindow(root, self)
         
         # setup new game
         self.on_new_game(3)

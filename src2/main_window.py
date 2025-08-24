@@ -11,10 +11,10 @@ class MainWindow(tk.Frame):
         self.root = root 
         self.controller = controller  
 
-        self.prefs_popup = PrefsPopup(self.root, controller)
-        self.about_popup = AboutPopup(self.root, controller)
-        self.win_popup = WinPopup(self.root, controller)
-        self.canavs = MainCanvas(self.root, controller)
+        self.prefs_popup = PrefsPopup(root, controller)
+        self.about_popup = AboutPopup(root, controller)
+        self.win_popup = WinPopup(root, controller)
+        self.canavs = MainCanvas(root, controller)
         
         self.setup_menubar()
 
@@ -22,8 +22,8 @@ class MainWindow(tk.Frame):
         # callback functions
         on_new_game = self.controller.on_new_game 
         on_quit = self.controller.on_quit 
-        on_prefs_popup = self.prefs_popup.trigger()
-        on_about_popup = self.about_popup.trigger()
+        on_prefs_popup = self.prefs_popup.trigger
+        on_about_popup = self.about_popup.trigger
 
         # menubar
         menubar = tk.Menu(self.root)
@@ -43,12 +43,12 @@ class MainWindow(tk.Frame):
 
         # menu 2
         prefs_menu = tk.Menu(menubar, tearoff=0)
-        prefs_menu.add_command(label="Open Prefs", command=on_prefs_popup)
+        prefs_menu.add_command(label="Open Prefs", command=lambda: on_prefs_popup)
         menubar.add_cascade(label="Preferences", menu=prefs_menu)
 
         # menu 3
         about_menu = tk.Menu(menubar, tearoff=0)
-        about_menu.add_command(label="Open Prefs", command=on_about_poppu)
-        menubar.add_cascade(label="Preferences", menu=about_menu)
+        about_menu.add_command(label="Open About", command=lambda: on_about_popup)
+        menubar.add_cascade(label="About", menu=about_menu)
         
         

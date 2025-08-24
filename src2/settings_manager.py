@@ -95,7 +95,7 @@ class SettingsManager:
             colors=random_colors
         )
     
-    def get_name(self) -> List[str]:
+    def get_theme_names(self) -> List[str]:
         theme_names = []
         for theme in self.themes:
             theme_names.append(theme.name)

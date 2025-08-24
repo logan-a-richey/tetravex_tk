@@ -30,7 +30,7 @@ class AbstractPopup(ABC):
         popup_x = root_x + (root_w // 2) - (popup_w // 2)
         popup_y = root_y + (root_h // 2) - (popup_h // 2)
 
-        popup.geometry("+{}+{}".format(px, py) )
+        popup.geometry("+{}+{}".format(popup_x, popup_y) )
 
 
 class PrefsPopup(AbstractPopup):
@@ -42,8 +42,8 @@ class PrefsPopup(AbstractPopup):
 
         current_settings = self.settings_manager.get_state() 
 
-        self.radio_var_1 = tk.StringVar(current_settings.theme.name)
-        self.checkbox_var_1 = self.BooleanVar(current_settings.enable_bad_rect)
+        self.radio_var_1 = tk.StringVar(value=current_settings.theme.name)
+        self.checkbox_var_1 = tk.BooleanVar(value=current_settings.enable_bad_rect)
 
     def on_radio_1(self):
         print("on_radio_1")
@@ -62,7 +62,7 @@ class PrefsPopup(AbstractPopup):
 
         tk.Label(popup, text="Color Theme").pack(pady=4)
         
-        theme_options = self.theme_manager.get_names()
+        theme_options = self.settings_manager.get_theme_names()
         for option in theme_options:
             tk.Radiobutton(
                 popup,
@@ -72,7 +72,7 @@ class PrefsPopup(AbstractPopup):
                 command=self.on_radio_1
             ).pack(pady=4)
 
-        self.center_popup()
+        self.center_popup(popup)
 
 
 class AboutPopup(AbstractPopup):
@@ -114,7 +114,7 @@ class AboutPopup(AbstractPopup):
         close_button = tk.Button(popup, text="Okay", command=popup.destroy)
         close_button.pack(pady=20)
 
-        self.center_popup()
+        self.center_popup(popup)
 
 
 class WinPopup(AbstractPopup):
@@ -131,5 +131,5 @@ class WinPopup(AbstractPopup):
         
         close_button = tk.Button(popup, text="Okay", command=popup.destroy).pack(pady=4)
         
-        self.center_popup()
+        self.center_popup(popup)
 
