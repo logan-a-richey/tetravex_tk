@@ -155,15 +155,11 @@ class MainCanvas:
                 x1 = x0 + tile
                 y1 = y0 + tile
             
-                draw_overlay = False
-                overlay_color = "" 
-                if (i, j) in square_state.bad_coords:
+                if settings_state.enable_bad_rect and (i, j) in square_state.bad_coords:
                     overlay_color = "#ff0000"
                     draw_overlay = True
+
                 if (i, j) in square_state.hint_coords:
                     overlay_color = "#00ff00"
-                    draw_overlay = True
-                
-                if settings_state.enable_bad_rect and draw_overlay:
                     self.canvas.create_rectangle(x0, y0, x1, y1, fill='', outline=overlay_color, width=4)
 

@@ -6,8 +6,6 @@ import random
 
 @dataclass
 class Block:
-    i: int
-    j: int
     ci: int
     cj: int
     n: int
@@ -27,7 +25,7 @@ class Move:
 class BoardState:
     num_rows: int
     num_cols: int
-    grid: list
+    grid: List[List["Block"]]
 
 class Engine:
     def __init__(self):
@@ -35,13 +33,13 @@ class Engine:
         num_rows = size
         num_cols = size * 2
 
-        self.grid = [[ Block(i, j, i, j + size, 0, 0, 0, 0, False) for j in range(num_cols)] for i in range(num_rows)]
+        self.grid = [[ Block(i, j+size, 0, 0, 0, 0, False) for j in range(num_cols)] for i in range(num_rows)]
 
     def new_game(self, size: int):
         num_rows = size
         num_cols = size * 2
         
-        self.grid = [[ Block(i, j, i, j + size, 0, 0, 0, 0, False) for j in range(num_cols)] for i in range(num_rows)]
+        self.grid = [[ Block(i, j + size, 0, 0, 0, 0, False) for j in range(num_cols)] for i in range(num_rows)]
 
         blocks = []
         for i in range(size):
@@ -65,11 +63,7 @@ class Engine:
             i = idx // size 
             j = idx % size
             self.grid[i][j] = b
-            self.grid[i][j].i = i 
-            self.grid[i][j].i = j
         
-        self.print_grid()
-    
     def block_say(self, b):
         if b.active:
             return "{}{}{}{}".format(b.n, b.e, b.s, b.w)
@@ -85,25 +79,18 @@ class Engine:
     def make_move(self, move: "Move"):
         i1, j1, i2, j2 = move.i1, move.j1, move.i2, move.j2  
         self.grid[i1][j1], self.grid[i2][j2] = self.grid[i2][j2], self.grid[i1][j1] 
-        self.grid[i1][j1].i = i1
-        self.grid[i1][j1].j = j1
-        self.grid[i2][j2].i = i2
-        self.grid[i2][j2].j = j2
 
     def get_hint_coords(self) -> List[Tuple[int, int]]:
         current_board_state = self.get_state()
         num_rows = current_board_state.num_rows
         num_cols = current_board_state.num_cols 
         
-        for i in range(num_rows):
-            for j in range(num_cols):
-                b = self.grid[i][j] 
-                if not b.active:
-                    continue
-                correct = (b.i == b.ci and b.j == b.cj)
-                if not correct:
-                    hint_coords = [ (b.i, b.j), (b.ci, b.cj) ]
-                    return hint_coords 
+        for i, row in enumerate(self.grid):
+            for j, b in enumerate(row):
+                if b.active and (i != b.ci or j != b.cj):
+                    # find the block currently at (b.ci, b.cj)
+                    target = self.grid[b.ci][b.cj]
+                    return [(i, j), (b.ci, b.cj)]
         return []
         
     def get_wrong_coords(self) -> List[Tuple[int, int]]:

@@ -40,7 +40,7 @@ class SettingsManager:
         self.load_themes()
         
         self.current_theme: "Theme" = self.themes[0]
-        self.enable_bad_rect: bool = False
+        self.enable_bad_rect: bool = True
         self.tile_size: int = 100
 
     def load_themes(self) -> None:
@@ -50,7 +50,7 @@ class SettingsManager:
             1: "#ed322f", # Red
             2: "#b58900", # Yellow
             3: "#859900", # Green
-            4: "#cb4b16", # Orange
+            4: "#bb3b06", # Orange
             5: "#2aa198", # Cyan
             6: "#207bd2", # Blue
             7: "#d33682", # Magenta

@@ -40,13 +40,11 @@ class Controller:
         self.clicked_square = None 
         self.bad_coords.clear()
         self.hint_coords.clear()
-
-        self.current_board_state = self.engine.get_state()
-        self.current_setting_state = self.settings_manager.get_state()
-        
         self.seen_win = False
         
         self.engine.new_game(size)
+        self.current_board_state = self.engine.get_state()
+        self.current_setting_state = self.settings_manager.get_state()
 
         self.resize_window()
         self.refresh()
@@ -124,6 +122,8 @@ class Controller:
             self.refresh()
     
     def on_get_hint(self):
+        print("hint")
+
         if self.hint_coords:
             self.on_make_move(
                 self.hint_coords[0][0],
@@ -145,11 +145,13 @@ class Controller:
         )
 
     def refresh(self):
-        # print("Controller::refresh() called")
+        #print("Controller::refresh() called")
         
         board_state = self.engine.get_state()
         settings_state = self.settings_manager.get_state() 
         square_state = self.get_square_state()
+        
+        print(square_state.hint_coords)
 
         self.main_window.canvas.redraw(
             board_state, 
@@ -161,24 +163,33 @@ class Controller:
         MIN_TILE_SIZE = 50
         ts = self.current_setting_state.tile_size 
         ts = max(MIN_TILE_SIZE, ts - 10)
+        
+        self.settings_manager.set_tile_size(ts)
+        self.current_setting_state = self.settings_manager.get_state()
+        self.resize_window()
         self.refresh()
 
     def on_zoom_in(self):
         MAX_TILE_SIZE = 200
         ts = self.current_setting_state.tile_size 
         ts = min(MAX_TILE_SIZE, ts + 10)
+        
+        self.settings_manager.set_tile_size(ts)
+        self.current_setting_state = self.settings_manager.get_state()
+        self.resize_window()
         self.refresh()
 
     def new_of_prev_size(self):
         self.new_game(self.last_size)
 
-
     def resize_window(self):
         num_rows = self.current_board_state.num_rows
         num_cols = self.current_board_state.num_cols
         ts = self.current_setting_state.tile_size 
+
         m = ts // 2
         w = num_cols * ts + m
         h = num_rows * ts
 
         self.root.geometry("{}x{}".format(w, h))
+
