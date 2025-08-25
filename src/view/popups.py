@@ -58,6 +58,8 @@ class PrefsPopup(AbstractPopup):
         popup.title("Preferences Window")
         popup.geometry("400x400")
         
+        popup.bind("<Return>", lambda event: popup.destroy() )
+        
         self.center_popup(popup)
 
         tk.Label(popup, text="Color Theme").pack(pady=4)
@@ -97,6 +99,8 @@ class AboutPopup(AbstractPopup):
         popup = tk.Toplevel(self.root)
         popup.title("About Window")
         popup.geometry("500x400")
+        
+        popup.bind("<Return>", lambda event: popup.destroy() )
 
         self.center_popup(popup)
         
@@ -140,6 +144,8 @@ class WinPopup(AbstractPopup):
         popup.title("Game over")
         popup.geometry("300x200")
         
+        popup.bind("<Return>", lambda event: popup.destroy() )
+
         self.center_popup(popup)
 
         msg = '\n'.join([ "You completed the puzzle!", "Congrats!" ])
