@@ -3,14 +3,19 @@
 import sys
 sys.dont_write_bytecode = True
 
-import tkinter as tk
-from mediator import Mediator 
+import tkinter as tk 
+
+from controller.controller import Controller
 
 def main():
+    print("Running program ...")
     root = tk.Tk()
-    root.title("Tetravex")
-    mediator = Mediator(root)
+    root.title("Tetravex App")
+
+    c = Controller(root)
     root.mainloop()
+    print("Exiting program ...")
+
 
 if __name__ == "__main__":
     main()

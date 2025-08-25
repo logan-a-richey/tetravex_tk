@@ -1,30 +1,28 @@
-# my_canvas.py
+# main_canvas.py 
 
-import tkinter as tk
-from typing import Optional, Tuple, List, Callable
+import tkinter as tk 
 
-# TODO use inheritance
-class MyCanvas:
-    def __init__(self, 
-        root, 
-        handle_click: Callable[[int, int], None],
-        theme_manager
-    ):
-        self.handle_click: Callable[[int, int], None] = handle_click
-        self.theme_manager = theme_manager 
+# class MainCanvas(tk.Canvas):
 
-        self.tile_size: int = 100
-        self.grid_margin: int = self.tile_size // 2
+class MainCanvas:
+    def __init__(self, root, controller):
+        self.root = root 
+        self.controller = controller
         
-        self.canvas = tk.Canvas(root, bg="#707070")
-        self.canvas.pack(side='top', fill='both', expand=True)
+        self.canvas = tk.Canvas(self.root, bg="#707070")
+        self.canvas.pack(side='top', fill='both', expand=True) 
         
-        self.canvas.bind('<Button-1>', lambda event: self.on_canvas_click(event) ) 
+        self.canvas.bind("<Button-1>", lambda event: self.controller.on_click(event) )
+        
+        self.canvas.bind('<Control-minus>', lambda event: self.controller.on_zoom_out() )
+        self.canvas.bind('<Control-equal>', lambda event: self.controller.on_zoom_in() )
+        self.canvas.bind('<Control-n>', lambda event: self.controller.new_of_prev_size() )
+        self.canvas.bind('<Control-h>', lambda event: self.controller.on_get_hint() )
+
         self.canvas.focus_set()
-    
-    def on_canvas_click(self, event):
-        self.handle_click(event.x, event.y)
 
+        self.canvas.pack(side="top", fill="both", expand=True)
+    
     def get_font_color(self, hex_color) -> str:
         r = int(hex_color[1:3], 16)
         g = int(hex_color[3:5], 16)
@@ -49,19 +47,25 @@ class MyCanvas:
         b = max(0, b - offset)
 
         return "#{:02x}{:02x}{:02x}".format(r, g, b)
-
-    def draw_block(self, block, x0, y0, x1, y1, current_colors: dict, dimmed: bool):
-        xc, yc = x0 + self.tile_size // 2, y0 + self.tile_size // 2
+    
+    def draw_block(self, 
+        block, 
+        x0, y0, x1, y1, 
+        tile_size,
+        current_colors: dict, 
+        dimmed: bool
+    ):
+        xc, yc = x0 + tile_size // 2, y0 + tile_size // 2
         b_c = (xc, yc)
         
         # vertices for tile
         b_nw, b_ne, b_sw, b_se = (x0, y0), (x1, y0), (x0, y1), (x1, y1)
 
         # text anchor positions
-        tn = (x0 + int(self.tile_size * 0.50), y0 + int(self.tile_size * 0.25))
-        te = (x0 + int(self.tile_size * 0.75), y0 + int(self.tile_size * 0.50))
-        ts = (x0 + int(self.tile_size * 0.50), y0 + int(self.tile_size * 0.75))
-        tw = (x0 + int(self.tile_size * 0.25), y0 + int(self.tile_size * 0.50))
+        tn = (x0 + int(tile_size * 0.50), y0 + int(tile_size * 0.25))
+        te = (x0 + int(tile_size * 0.75), y0 + int(tile_size * 0.50))
+        ts = (x0 + int(tile_size * 0.50), y0 + int(tile_size * 0.75))
+        tw = (x0 + int(tile_size * 0.25), y0 + int(tile_size * 0.50))
 
         # Define edge data for looping
         edges = [block.n, block.e, block.s, block.w]
@@ -92,33 +96,33 @@ class MyCanvas:
                 *text_pos, 
                 text=str(val), 
                 anchor=tk.CENTER, 
-                font=("Arial", int(self.tile_size * 0.15) ), 
+                font=("Arial", int(tile_size * 0.15) ), 
                 fill=text_color
             )
     
-    def refresh(self, 
-        grid: List[List["Block"]],
-        clicked_tile: Tuple[int, int],
-        wrong_coords: List[Tuple[int, int]],
-        hint_coords: List[Tuple[int, int]],
-        enable_bad_rect: bool
-    ):
+    def redraw(self, board_state, settings_state, square_state):
         self.canvas.delete("all")
 
-        current_theme = self.theme_manager.get()
-        current_colors = current_theme.colors
+        grid = board_state.grid
+        numRows = board_state.num_rows
+        numCols = board_state.num_cols
+
+        tile = settings_state.tile_size
+        grid_margin = tile // 2
+
+        current_theme = settings_state.theme 
+        current_colors = settings_state.theme.colors
         
-        numRows = len(grid)
-        numCols = len(grid[0])
+        clicked_tile = square_state.clicked_square 
 
         for i in range(numRows):
             for j in range(numCols):
-                x0 = j * self.tile_size 
-                y0 = i * self.tile_size 
+                x0 = j * tile 
+                y0 = i * tile 
                 if j >= numCols // 2:
-                    x0 += self.grid_margin
-                x1 = x0 + self.tile_size
-                y1 = y0 + self.tile_size
+                    x0 += grid_margin
+                x1 = x0 + tile
+                y1 = y0 + tile
                 
                 # see if square has been clicked
                 dimmed = False
@@ -127,34 +131,41 @@ class MyCanvas:
                         dimmed = True
 
                 # draw grid
-                bg_color = current_colors.get('grid_bg', '#000000')
+                bg_color = current_theme.grid_bg
                 if dimmed:
                     bg_color = self.dim_color(bg_color)
                 self.canvas.create_rectangle(x0, y0, x1, y1, fill=bg_color)
                 
+                # draw block
                 block = grid[i][j] 
                 if block.active:
-                    self.draw_block(block, x0, y0, x1, y1, current_colors, dimmed)
+                    self.draw_block(block, x0, y0, x1, y1, tile, current_colors, dimmed)
                 
                 # draw grid outline
-                outline_color = current_colors.get('outline', '#000000')
+                outline_color = current_theme.grid_outline
                 self.canvas.create_rectangle(x0, y0, x1, y1, fill='', outline=outline_color, width=2)
 
         # draw overlays
         for i in range(numRows):
             for j in range(numCols):
-                x0 = j * self.tile_size 
-                y0 = i * self.tile_size 
+                x0 = j * tile 
+                y0 = i * tile 
                 if j >= numCols // 2:
-                    x0 += self.grid_margin
-                x1 = x0 + self.tile_size
-                y1 = y0 + self.tile_size
+                    x0 += grid_margin
+                x1 = x0 + tile
+                y1 = y0 + tile
+            
+                draw_overlay = False 
+                overlay_color = "#000000"
 
-                outline_color = "" 
-                if (i, j) in wrong_coords:
-                    outline_color = "#ff0000"
-                if (i, j) in hint_coords:
-                    outline_color = "#00ff00"
-                
-                if enable_bad_rect and outline_color:
-                    self.canvas.create_rectangle(x0, y0, x1, y1, fill='', outline=outline_color, width=4)
+                if settings_state.enable_bad_rect and (i, j) in square_state.bad_coords:
+                    overlay_color = "#ff0000"
+                    draw_overlay = True
+
+                if (i, j) in square_state.hint_coords:
+                    overlay_color = "#00ff00"
+                    draw_overlay = True
+                    
+                if draw_overlay:
+                    self.canvas.create_rectangle(x0, y0, x1, y1, fill='', outline=overlay_color, width=4)
+

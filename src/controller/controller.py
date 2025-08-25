@@ -50,7 +50,6 @@ class Controller:
         self.refresh()
     
     def on_quit(self):
-        print("[INFO] Quitting")
         self.root.quit()
     
     def get_mouse_coords(self, event) -> Optional[Tuple[int, int]]:
@@ -103,7 +102,6 @@ class Controller:
     
     def on_click(self, event):
         coord = self.get_mouse_coords(event)
-        print(coord)
 
         if not coord:
             self.clicked_square = None
@@ -122,8 +120,6 @@ class Controller:
             self.refresh()
     
     def on_get_hint(self):
-        print("hint")
-
         if self.hint_coords:
             self.on_make_move(
                 self.hint_coords[0][0],
@@ -145,14 +141,10 @@ class Controller:
         )
 
     def refresh(self):
-        #print("Controller::refresh() called")
-        
         board_state = self.engine.get_state()
         settings_state = self.settings_manager.get_state() 
         square_state = self.get_square_state()
         
-        print(square_state.hint_coords)
-
         self.main_window.canvas.redraw(
             board_state, 
             settings_state, 
@@ -180,7 +172,7 @@ class Controller:
         self.refresh()
 
     def new_of_prev_size(self):
-        self.new_game(self.last_size)
+        self.on_new_game(self.last_size)
 
     def resize_window(self):
         num_rows = self.current_board_state.num_rows
