@@ -13,6 +13,7 @@ COLOR_WHITE = "#d0d0d0"
 class SettingsState:
     theme: "Theme"
     enable_bad_rect: bool 
+    tile_size: int
 
 class Theme:
     def __init__(self,
@@ -40,6 +41,7 @@ class SettingsManager:
         
         self.current_theme: "Theme" = self.themes[0]
         self.enable_bad_rect: bool = False
+        self.tile_size: int = 100
 
     def load_themes(self) -> None:
         # Theme 1
@@ -110,7 +112,17 @@ class SettingsManager:
                     return
                 self.current_theme = theme 
                 return 
+    
+    def set_enable_bad_rect(self, var: bool) -> None:
+        self.enable_bad_rect = var
+
+    def set_tile_size(self, tile_size: int) -> None:
+        self.tile_size = tile_size 
 
     def get_state(self) -> "SettingsState":
-        return SettingsState(self.current_theme, self.enable_bad_rect)
+        return SettingsState(
+            self.current_theme, 
+            self.enable_bad_rect, 
+            self.tile_size
+        )
 

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import sys
+sys.dont_write_bytecode = True
+
 import tkinter as tk 
 
-from controller import Controller
+from controller.controller import Controller
 
 def main():
     print("Running program ...")

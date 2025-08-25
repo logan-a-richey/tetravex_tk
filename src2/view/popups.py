@@ -37,8 +37,6 @@ class PrefsPopup(AbstractPopup):
     def __init__(self, root, controller):
         super().__init__(root, controller)
         self.settings_manager = controller.settings_manager
-        
-        self.refresh = self.controller.refresh()
 
         current_settings = self.settings_manager.get_state() 
 
@@ -46,19 +44,21 @@ class PrefsPopup(AbstractPopup):
         self.checkbox_var_1 = tk.BooleanVar(value=current_settings.enable_bad_rect)
 
     def on_radio_1(self):
-        print("on_radio_1")
         var = self.radio_var_1.get()
-        self.refresh()
+        self.settings_manager.set_theme(var)
+        self.controller.refresh()
 
     def on_checkbox_1(self):
-        print("on_checkbox_1")
         var = self.checkbox_var_1.get()
-        self.refresh()
+        self.settings_manager.set_enable_bad_rect(var)
+        self.controller.refresh()
         
     def trigger(self):
         popup = tk.Toplevel(self.root)
         popup.title("Preferences Window")
         popup.geometry("400x400")
+        
+        self.center_popup(popup)
 
         tk.Label(popup, text="Color Theme").pack(pady=4)
         
@@ -71,8 +71,22 @@ class PrefsPopup(AbstractPopup):
                 value=option,
                 command=self.on_radio_1
             ).pack(pady=4)
+        
+        # --- Checkbox ---
+        tk.Checkbutton(
+            popup,
+            text="Enable Bad Rect Outline",
+            variable=self.checkbox_var_1,
+            command=self.on_checkbox_1,
+        ).pack(pady=20)
 
-        self.center_popup(popup)
+        # --- Close Button ---
+        tk.Button(
+            popup,
+            text="Okay",
+            command=popup.destroy,
+        ).pack(pady=5)
+        
 
 
 class AboutPopup(AbstractPopup):
@@ -84,6 +98,8 @@ class AboutPopup(AbstractPopup):
         popup.title("About Window")
         popup.geometry("500x400")
 
+        self.center_popup(popup)
+        
         label_1 = tk.Label(popup, text="How to play", bg='#777777', font=("Arial", 16))
         label_1.pack(pady=4)
 
@@ -114,22 +130,21 @@ class AboutPopup(AbstractPopup):
         close_button = tk.Button(popup, text="Okay", command=popup.destroy)
         close_button.pack(pady=20)
 
-        self.center_popup(popup)
-
 
 class WinPopup(AbstractPopup):
     def __init__(self, root, controller):
         super().__init__(root, controller)
     
     def trigger(self):
-        popup = tk.Toplevel(self.app.root)
+        popup = tk.Toplevel(self.root)
         popup.title("Game over")
         popup.geometry("300x200")
+        
+        self.center_popup(popup)
 
         msg = '\n'.join([ "You completed the puzzle!", "Congrats!" ])
         label = tk.Label(popup, text=msg).pack(pady=20)
         
         close_button = tk.Button(popup, text="Okay", command=popup.destroy).pack(pady=4)
         
-        self.center_popup(popup)
 

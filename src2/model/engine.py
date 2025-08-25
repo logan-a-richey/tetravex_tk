@@ -9,7 +9,7 @@ class Block:
     i: int
     j: int
     ci: int
-    ji: int
+    cj: int
     n: int
     e: int
     s: int
@@ -64,6 +64,7 @@ class Engine:
         for idx, b in enumerate(blocks):
             i = idx // size 
             j = idx % size
+            self.grid[i][j] = b
             self.grid[i][j].i = i 
             self.grid[i][j].i = j
         
@@ -80,15 +81,32 @@ class Engine:
             for block in row:
                 print(self.block_say(block), end=" ")
             print()
+    
+    def make_move(self, move: "Move"):
+        i1, j1, i2, j2 = move.i1, move.j1, move.i2, move.j2  
+        self.grid[i1][j1], self.grid[i2][j2] = self.grid[i2][j2], self.grid[i1][j1] 
+        self.grid[i1][j1].i = i1
+        self.grid[i1][j1].j = j1
+        self.grid[i2][j2].i = i2
+        self.grid[i2][j2].j = j2
 
-    def get_hint_coords(self):
-        for row in self.grid:
-            for block in row:
-                if block.i != block.ci and block.j != block.cj:
-                    return [ (i, j), (ci, cj) ]
-        return []    
-
-    def get_wrong_coords(self):
+    def get_hint_coords(self) -> List[Tuple[int, int]]:
+        current_board_state = self.get_state()
+        num_rows = current_board_state.num_rows
+        num_cols = current_board_state.num_cols 
+        
+        for i in range(num_rows):
+            for j in range(num_cols):
+                b = self.grid[i][j] 
+                if not b.active:
+                    continue
+                correct = (b.i == b.ci and b.j == b.cj)
+                if not correct:
+                    hint_coords = [ (b.i, b.j), (b.ci, b.cj) ]
+                    return hint_coords 
+        return []
+        
+    def get_wrong_coords(self) -> List[Tuple[int, int]]:
         wrong_coords = []
         
         directions = [ [-1, 0], [1, 0], [0, 1], [0, -1] ]
@@ -113,12 +131,16 @@ class Engine:
                         continue
                     if (j2 < offset or j2 >= num_cols):
                         continue
+                    
+                    if not self.grid[i2][j2].active:
+                        continue
 
                     block_edge = getattr(self.grid[i][j], block_attr)
-                    other_edge = getattr(self.grid[ci][cj], other_attr)
-
+                    other_edge = getattr(self.grid[i2][j2], other_attr)
+                    
                     if (block_edge != other_edge):
-                        wrong_coords.append(i, j)
+                        coord = (i, j)
+                        wrong_coords.append(coord)
 
         return wrong_coords 
 
@@ -147,7 +169,7 @@ class Engine:
                         continue
 
                     block_edge = getattr(self.grid[i][j], block_attr)
-                    other_edge = getattr(self.grid[ci][cj], other_attr)
+                    other_edge = getattr(self.grid[i2][j2], other_attr)
 
                     if (block_edge != other_edge):
                         return False
@@ -160,7 +182,4 @@ class Engine:
         # hint_coords =
         # wrong_coords =
         return BoardState(num_rows, num_cols, self.grid)
-
-
-
 
