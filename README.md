@@ -13,7 +13,9 @@ Inspired by the Ubuntu "gnome games" version of Tetravex.
 
 ## Linux Setup:
 First, if you do not have Tkinter already, use the following command to install it:
-`sudo apt-get install python3-tk`
+```bash
+sudo apt-get install python3-tk
+```
 
 Next, create a Python virtual environment at the root directory level:
 ```bash
@@ -35,7 +37,7 @@ cd src/
 ```
 
 ## Contributions
-This is a work-in-progress learning project to learn GUI management in Tkinter. 
+This is a work-in-progress learning project to learn GUI management in Tkinter. <br>
 Please submit a pull request and I can review any suggestions.
 
 # License
