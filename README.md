@@ -11,9 +11,32 @@ Inspired by the Ubuntu "gnome games" version of Tetravex.
 * Visual tweaks via preferences menu
 * Hint feature
 
+## Linux Setup:
+First, if you do not have Tkinter already, use the following command to install it:
+`sudo apt-get install python3-tk`
+
+Next, create a Python virtual environment at the root directory level:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+which python3
+```
+
+Ensure that you are using the python3 venv and not system python. Pip install requirements:
+```bash
+which python3
+pip install -r requirements.txt
+```
+
+Run the program:
+```bash
+cd src/
+./main.py
+```
+
 ## Contributions
 This is a work-in-progress learning project to learn GUI management in Tkinter. 
-Please submit a pull request and I can review any suggestions!
+Please submit a pull request and I can review any suggestions.
 
 # License
 
@@ -38,5 +61,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-
